@@ -50,18 +50,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(setting,SIGNAL(triggered()),settingsDialog,SLOT(show()));
     trayMenu->addAction(setting);
 
+    trayMenu->addSeparator();
+
     updateAction = new QAction("Update Now",this);
     connect(updateAction,SIGNAL(triggered()),this,SLOT(updateFiles()));
     trayMenu->addAction(updateAction);
     updateAction->setDisabled(true);
 
-    trayMenu->addSeparator();
-
     statusAction = new QAction("Please log in",this);
     statusAction->setDisabled(true);
     trayMenu->addAction(statusAction);
-
-    trayMenu->addSeparator();
 
     recent = new QMenu("Recently downloaded files",this);
     int l = settings->recents().length();
@@ -74,6 +72,8 @@ MainWindow::MainWindow(QWidget *parent) :
         recent->setDisabled(true);
     }
     trayMenu->addMenu(recent);
+
+    trayMenu->addSeparator();
 
     QAction* quit = new QAction("Quit",this);
     connect(quit,SIGNAL(triggered()),qApp,SLOT(quit()));
