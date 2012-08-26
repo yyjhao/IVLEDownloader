@@ -55,24 +55,28 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
         }else if(p == QString("/api/Lapi.svc/Workbins")){
             //if more than 1 workbin, just fetch the first one
             //TODO: multiple workbin support.
-            QVariantList folderlist = (QtJson::Json::parse(QString(reply->readAll())).toMap().value("Results").toList())[0].toMap().value("Folders").toList();
-            QVariantMap folders;
-            for(int i = 0; i < folderlist.count(); i++){
-                QVariantMap folder, files;
-                QVariantList filelist = folderlist[i].toMap().value("Files").toList();
-                for(int j = 0; j < filelist.count(); j++){
-                    QVariantMap file, fileJS = filelist[j].toMap();
-                    file.insert("name",fileJS.value("FileName"));
-                    file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
-                    folder.insert(fileJS.value("ID").toString(),file);
+            QVariantList resultsList = QtJson::Json::parse(QString(reply->readAll())).toMap().value("Results").toList();
+            if(resultsList.count() > 0){
+                //otherwise, no workbin
+                QVariantList folderlist = resultsList[0].toMap().value("Folders").toList();
+                QVariantMap folders;
+                for(int i = 0; i < folderlist.count(); i++){
+                    QVariantMap folder, files;
+                    QVariantList filelist = folderlist[i].toMap().value("Files").toList();
+                    for(int j = 0; j < filelist.count(); j++){
+                        QVariantMap file, fileJS = filelist[j].toMap();
+                        file.insert("name",fileJS.value("FileName"));
+                        file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
+                        folder.insert(fileJS.value("ID").toString(),file);
+                    }
+                    folders.insert(folderlist[i].toMap().value("FolderName").toString(),folder);
                 }
-                folders.insert(folderlist[i].toMap().value("FolderName").toString(),folder);
+                QString key = courses.keys()[currentWebBinFetching];
+                QVariantMap tmp = courses.value(key).toMap();
+                courses.remove(key);
+                tmp.insert("folders",folders);
+                courses.insert(key,tmp);
             }
-            QString key = courses.keys()[currentWebBinFetching];
-            QVariantMap tmp = courses.value(key).toMap();
-            courses.remove(key);
-            tmp.insert("folders",folders);
-            courses.insert(key,tmp);
             fetchWorkBin();
         }else if(p == QString("/api/downloadfile.ashx")){
             updateDownload();
