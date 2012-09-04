@@ -46,7 +46,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(open,SIGNAL(triggered()),this,SLOT(show()));
     trayMenu->addAction(open);
 
+#ifdef Q_WS_MAC
+    QAction* setting = new QAction(QString::fromUtf8("Preferences…"),this);
+#else
     QAction* setting = new QAction("Settings",this);
+#endif
     connect(setting,SIGNAL(triggered()),settingsDialog,SLOT(show()));
     trayMenu->addAction(setting);
 
