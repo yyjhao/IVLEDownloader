@@ -14,7 +14,7 @@
 #include <QMenu>
 #include <QDesktopServices>
 #include <QDateTime>
-#include <recentfileaction.h>
+#include "recentfileaction.h"
 
 namespace Ui {
 class MainWindow;
