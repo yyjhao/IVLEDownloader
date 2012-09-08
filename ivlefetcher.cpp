@@ -19,6 +19,27 @@ void IVLEFetcher::start(){
     validate();
 }
 
+QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
+    QVariantList filelist = map.value("Files").toList();
+    QVariantMap files,folder;
+    for(int j = 0; j < filelist.count(); j++){
+        QVariantMap file, fileJS = filelist[j].toMap();
+        file.insert("name",fileJS.value("FileName"));
+        file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
+        files.insert(fileJS.value("ID").toString(),file);
+    }
+    folder.insert("files",files);
+    QVariantMap folders;
+    QVariantList folderlist = map.value("Folders").toList();
+    if(folderlist.count() > 0){
+        for(int i = 0; i < folderlist.count(); i++){
+            folders.insert(folderlist[i].toMap().value("FolderName").toString(),jsonToFolder(folderlist[i].toMap()));
+        }
+        folder.insert("folders",folders);
+    }
+    return folder;
+}
+
 void IVLEFetcher::gotReply(QNetworkReply *reply){
     qDebug()<<"redirect"<<reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     bool toDelete = true;
@@ -58,23 +79,11 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             QVariantList resultsList = QtJson::Json::parse(QString(reply->readAll())).toMap().value("Results").toList();
             if(resultsList.count() > 0){
                 //otherwise, no workbin
-                QVariantList folderlist = resultsList[0].toMap().value("Folders").toList();
-                QVariantMap folders;
-                for(int i = 0; i < folderlist.count(); i++){
-                    QVariantMap folder, files;
-                    QVariantList filelist = folderlist[i].toMap().value("Files").toList();
-                    for(int j = 0; j < filelist.count(); j++){
-                        QVariantMap file, fileJS = filelist[j].toMap();
-                        file.insert("name",fileJS.value("FileName"));
-                        file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
-                        folder.insert(fileJS.value("ID").toString(),file);
-                    }
-                    folders.insert(folderlist[i].toMap().value("FolderName").toString(),folder);
-                }
+                QVariantMap top = jsonToFolder(resultsList[0].toMap());
                 QString key = courses.keys()[currentWebBinFetching];
                 QVariantMap tmp = courses.value(key).toMap();
                 courses.remove(key);
-                tmp.insert("folders",folders);
+                tmp.insert("filesystem",top);
                 courses.insert(key,tmp);
             }
             fetchWorkBin();
@@ -111,41 +120,41 @@ void IVLEFetcher::setDirectory(const QString &dir){
     }
 }
 
+void IVLEFetcher::exploreFolder(QDir& path, const QVariantMap& map){
+    QVariantMap::Iterator it;
+    QVariantMap files = map.value("files").toMap(), folders = map.value("folders").toMap(), file;
+    for(it = files.begin(); it != files.end(); it++){
+        file = it.value().toMap();
+        if(!path.exists(file.value("name").toString())){
+            toDownload.insert(it.key(),path.absoluteFilePath(file.value("name").toString()));
+        }
+    }
+    for(it = folders.begin(); it != folders.end(); it++){
+        if(!path.exists(it.key())){
+            path.mkdir(it.key());
+        }
+        path.cd(it.key());
+        exploreFolder(path,it.value().toMap());
+    }
+    path.cdUp();
+}
+
 void IVLEFetcher::buildDirectoriesAndDownloadList(){
-    QVariantMap::Iterator it,itt, ittt;
+    QVariantMap::Iterator it;
     QString name;
-    QVariantMap folders, course,files,file;
+    QVariantMap filesystem, course;
     toDownload.clear();
     for(it = courses.begin(); it != courses.end(); it++){
         course = it.value().toMap();
         name = course.value("name").toString();
-        folders = course.value("folders").toMap();
+        filesystem = course.value("filesystem").toMap();
         if(!path.exists(name)){
             if(!path.mkpath(name)){
                 qWarning("Failed to create directory!");
             }
         }
         path.cd(name);
-        for(itt = folders.begin(); itt != folders.end(); itt++){
-            files = itt.value().toMap();
-            if(files.count() == 0){
-                qDebug()<<itt.key();
-            }else{
-                if(!path.exists(itt.key())){
-                    path.mkdir(itt.key());
-                }
-                path.cd(itt.key());
-                for(ittt = files.begin(); ittt != files.end(); ittt++){
-                    file = ittt.value().toMap();
-                    //TODO: update files if the file found is older than the one in webbin
-                    if(!path.exists(file.value("name").toString())){
-                        toDownload.insert(ittt.key(),path.absoluteFilePath(file.value("name").toString()));
-                    }
-                }
-                path.cdUp();
-            }
-        }
-        path.cdUp();
+        exploreFolder(path, filesystem);
     }
     emit statusUpdate(gottenWebbinInfo);
     download();

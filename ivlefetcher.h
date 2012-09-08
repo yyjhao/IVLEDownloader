@@ -62,6 +62,8 @@ private:
     void fetchWorkbins();
     void fetchWorkBin();
     void download();
+    QVariantMap jsonToFolder(const QVariantMap&);
+    void exploreFolder(QDir&, const QVariantMap&);
 
     QString token;
     QDir path;
