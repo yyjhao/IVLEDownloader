@@ -133,8 +133,12 @@ void MainWindow::logDownload(const QString &filename){
 
 void MainWindow::processToken(const QString& token){
     settings->setToken(token);
-    if(ivlefetcher == NULL && !settings->directory().isEmpty()){
-        createFetcher();
+    if(!settings->directory().isEmpty()){
+        if(ivlefetcher == NULL){
+            createFetcher();
+        }else{
+            ivlefetcher->setToken(token);
+        }
     }
 }
 
