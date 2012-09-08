@@ -40,7 +40,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             qDebug()<<_username;
             emit statusUpdate(gottenUserInfo);
             fetchModules();
-        }else if(p == QString("/api/Lapi.svc/Modules_Student")){
+        }else if(p == QString("/api/Lapi.svc/Modules")){
             courses.clear();
             QVariantList courseList = QtJson::Json::parse(QString(reply->readAll())).toMap().value("Results").toList();
             for(int i = 0; i < courseList.count(); i++){
@@ -176,7 +176,7 @@ void IVLEFetcher::fetchUserInfo(){
 void IVLEFetcher::fetchModules(){
     timer->stop();
     emit statusUpdate(gettingWebbinInfo);
-    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Modules_Student?APIKey=%1&AuthToken=%2&Duration=0&IncludeAllInfo=false&output=json").arg(APIKEY).arg(token))));
+    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Modules?APIKey=%1&AuthToken=%2&Duration=0&IncludeAllInfo=false&output=json").arg(APIKEY).arg(token))));
 }
 
 void IVLEFetcher::download(){
