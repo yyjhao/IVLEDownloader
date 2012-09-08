@@ -3,6 +3,8 @@
 This is simple Qt daemon to automatically download [National University of Singapore](http://www.nus.edu.sg/)'s
 [Integrated Virtual Learning Environment](http://ivle.nus.edu.sg/) workbin files.
 
+It uses the [qt-json library](https://github.com/ereilin/qt-json).
+
 ---
 
 # How to use?
