@@ -27,6 +27,10 @@ public:
 public slots:
     void setLabelText(const QString&);
     void setDlText(const QString&);
+    void setMaxFileValue(int val);
+
+protected:
+    void closeEvent(QCloseEvent *);
 
     
 private slots:
@@ -38,6 +42,7 @@ private slots:
 signals:
     void gottenToken(QString);
     void updateDirectory(QString);
+    void closedWithMaxFileSize(int);
 
 private:
     Ui::SettingsDialog *ui;

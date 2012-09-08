@@ -1,7 +1,7 @@
 #include "ivlefetcher.h"
 #include <QDebug>
 
-IVLEFetcher::IVLEFetcher(QString token, QString dir, QObject *parent) :
+IVLEFetcher::IVLEFetcher(QString token, QString dir, double maxfilesize, QObject *parent) :
     QObject(parent)
 {
     this->token = token;
@@ -9,6 +9,7 @@ IVLEFetcher::IVLEFetcher(QString token, QString dir, QObject *parent) :
     manager = new QNetworkAccessManager(this);
     connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(gotReply(QNetworkReply*)));
     session = new QObject(this);
+    this->maxFileSize = maxfilesize;
     timer = new QTimer(this);
     timer->setSingleShot(true);
     connect(timer,SIGNAL(timeout()),this,SLOT(fetchModules()));
@@ -24,9 +25,12 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
     QVariantMap files,folder;
     for(int j = 0; j < filelist.count(); j++){
         QVariantMap file, fileJS = filelist[j].toMap();
-        file.insert("name",fileJS.value("FileName"));
-        file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
-        files.insert(fileJS.value("ID").toString(),file);
+        if(fileJS.value("FileSize").toDouble() < maxFileSize){
+            //ignore files that are too big
+            file.insert("name",fileJS.value("FileName"));
+            file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
+            files.insert(fileJS.value("ID").toString(),file);
+        }
     }
     folder.insert("files",files);
     QVariantMap folders;
@@ -220,6 +224,15 @@ void IVLEFetcher::setToken(const QString &t){
         delete session;
         session = new QObject(this);
         this->token = t;
+        this->start();
+    }
+}
+
+void IVLEFetcher::setMaxFileSize(double s){
+    if(this->maxFileSize != s){
+        delete session;
+        session = new QObject(this);
+        this->maxFileSize = s;
         this->start();
     }
 }

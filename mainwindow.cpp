@@ -34,11 +34,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     settings = new Settings(this);
     settingsDialog->notifyCheck()->setChecked(settings->notify());
+    settingsDialog->setMaxFileValue(int(settings->maxFileSize() / 1024 / 1024));
 
     connect(settingsDialog->notifyCheck(),SIGNAL(clicked(bool)),settings,SLOT(setNotify(bool)));
     connect(settingsDialog, SIGNAL(gottenToken(QString)), this, SLOT(processToken(QString)));
     connect(settingsDialog,SIGNAL(updateDirectory(QString)),settings,SLOT(setDirectory(QString)));
     connect(settingsDialog,SIGNAL(updateDirectory(QString)),this,SLOT(updateDirectory(QString)));
+    connect(settingsDialog,SIGNAL(closedWithMaxFileSize(int)),this,SLOT(processMaxFileSize(int)));
 
     trayMenu = new QMenu(this);
 
@@ -107,6 +109,13 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason r){
     icon->setIcon(normalIcon);
 }
 
+void MainWindow::processMaxFileSize(int s){
+    //s is in mb
+    double size = (double)s * 1024 * 1024;
+    settings->setMaxFileSize(size);
+    ivlefetcher->setMaxFileSize(size);
+}
+
 void MainWindow::updateFiles(){
     if(ivlefetcher != NULL){
         if(needStart){
@@ -159,7 +168,7 @@ void MainWindow::updateRecent(const QString &filename){
 }
 
 void MainWindow::createFetcher(){
-    ivlefetcher = new IVLEFetcher(settings->token(), settings->directory(), this);
+    ivlefetcher = new IVLEFetcher(settings->token(), settings->directory(), settings->maxFileSize(), this);
     connect(ivlefetcher,SIGNAL(statusUpdate(fetchingState)),this,SLOT(updateStatus(fetchingState)));
     connect(ivlefetcher,SIGNAL(tokenUpdated(QString)),this,SLOT(processToken(QString)));
     connect(ivlefetcher,SIGNAL(fileDownloaded(QString)),this,SLOT(logDownload(QString)));

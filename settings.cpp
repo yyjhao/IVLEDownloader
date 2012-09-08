@@ -10,6 +10,14 @@ Settings::Settings(QObject *parent) :
     _recents = settingsPrivate->value("recentFiles",QStringList()).toStringList();
 }
 
+double Settings::maxFileSize(){
+    return settingsPrivate->value("maxFileSize",50).toDouble();
+}
+
+void Settings::setMaxFileSize(double s){
+    return settingsPrivate->setValue("maxFileSize",s);
+}
+
 bool Settings::notify(){
     return _notify;
 }

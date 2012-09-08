@@ -63,3 +63,11 @@ void SettingsDialog::on_pushButton_2_clicked()
     }
 }
 
+void SettingsDialog::setMaxFileValue(int val){
+    ui->spinBox->setValue(val);
+}
+
+void SettingsDialog::closeEvent(QCloseEvent *e){
+    emit closedWithMaxFileSize(ui->spinBox->value());
+    QDialog::closeEvent(e);
+}

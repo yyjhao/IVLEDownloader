@@ -34,10 +34,10 @@ class IVLEFetcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit IVLEFetcher(QString, QString, QObject *parent = 0);
+    explicit IVLEFetcher(QString, QString, double, QObject *parent = 0);
     QString username();
     int remainingFiles();
-
+    void setMaxFileSize(double);
 
 signals:
     void statusUpdate(fetchingState);
@@ -73,6 +73,7 @@ private:
     int currentWebBinFetching;
     QVariantMap toDownload;
     int numOfFiles;
+    double maxFileSize;
     //set parents of downloader and replies to this so that we can easily terminate a downloading session.
     QObject *session;
     QTimer *timer;

@@ -20,6 +20,7 @@ public:
     bool notify();
     const QStringList& recents();
     void addRecentFile(const QString&);
+    double maxFileSize();
 
 signals:
     
@@ -27,6 +28,7 @@ public slots:
     void setToken(const QString&);
     void setDirectory(const QString&);
     void setNotify(bool val);
+    void setMaxFileSize(double s);
 
 private:
     QSettings* settingsPrivate;
