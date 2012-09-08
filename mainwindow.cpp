@@ -139,6 +139,8 @@ void MainWindow::processToken(const QString& token){
         }else{
             ivlefetcher->setToken(token);
         }
+    }else{
+        settingsDialog->setLabelText("Please set the download directory below.");
     }
 }
 
