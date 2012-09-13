@@ -5,6 +5,8 @@ This is simple Qt daemon to automatically download [National University of Singa
 
 It uses the [qt-json library](https://github.com/ereilin/qt-json).
 
+You can read more about it [here](http://yjyao.com/2012/08/nus-ivle-downloader.html).
+
 ---
 
 # How to use?
