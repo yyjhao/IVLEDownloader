@@ -143,6 +143,28 @@ void IVLEFetcher::exploreFolder(QDir& path, const QVariantMap& map){
     path.cdUp();
 }
 
+QVariantMap IVLEFetcher::cleanFileSystem(const QVariantMap& filesystem){
+    QVariantMap folders = filesystem["folders"].toMap();
+    QStringList keys = folders.keys();
+    QVariantMap folder;
+    for(int i = 0; i < keys.size(); i++){
+        folder = cleanFileSystem(folders[keys[i]].toMap());
+        if(folder.isEmpty()){
+            folders.remove(keys[i]);
+        }else{
+            folders[keys[i]] = folder;
+        }
+    }
+    QVariantMap result;
+    if(!folders.isEmpty()){
+        result["folders"] = folders;
+    }
+    if(!filesystem["files"].toMap().isEmpty()){
+        result["files"] = filesystem["files"];
+    }
+    return result;
+}
+
 void IVLEFetcher::buildDirectoriesAndDownloadList(){
     QVariantMap::Iterator it;
     QString name;
@@ -151,7 +173,9 @@ void IVLEFetcher::buildDirectoriesAndDownloadList(){
     for(it = courses.begin(); it != courses.end(); it++){
         course = it.value().toMap();
         name = course.value("name").toString();
-        filesystem = course.value("filesystem").toMap();
+        filesystem = cleanFileSystem(course.value("filesystem").toMap());
+        // module has no files, skip
+        if(filesystem.isEmpty())continue;
         if(!path.exists(name)){
             if(!path.mkpath(name)){
                 qWarning("Failed to create directory!");

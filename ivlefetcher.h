@@ -62,6 +62,10 @@ private:
     void fetchWorkbins();
     void fetchWorkBin();
     void download();
+
+    // remove all empty folders
+    // returns the cleaned up file structure
+    QVariantMap cleanFileSystem(const QVariantMap&);
     QVariantMap jsonToFolder(const QVariantMap&);
     void exploreFolder(QDir&, const QVariantMap&);
 
