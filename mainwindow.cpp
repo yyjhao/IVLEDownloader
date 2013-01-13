@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setAttribute(Qt::WA_QuitOnClose,false);
 
 
-    QDir d = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    QDir d = QStandardPaths::standardLocations(QStandardPaths::DataLocation)[0];
     if(!d.exists()){
         QDir().mkpath(d.path());
     }

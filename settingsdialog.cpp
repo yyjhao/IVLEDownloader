@@ -26,7 +26,7 @@ void SettingsDialog::onWebviewLoaded(){
     QUrl url = webView->url();
     if(url.host() == QString("ivle.nus.edu.sg")&&
             url.path() == QString("/api/login/login_result.ashx")&&
-            url.queryItemValue("r") == QString("0")){
+            QUrlQuery(url).queryItemValue("r") == QString("0")){
         qDebug()<<"OK!";
         webviewDialog->close();
         emit gottenToken(webView->page()->mainFrame()->toPlainText());

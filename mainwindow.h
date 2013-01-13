@@ -7,6 +7,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QStandardPaths>
 #include "settingsdialog.h"
 #include "settings.h"
 #include "ivlefetcher.h"

@@ -5,7 +5,8 @@
 #-------------------------------------------------
 
 QT       += core gui\
-            webkit\
+            widgets\
+            webkitwidgets\
             network
 
 TARGET = IVLEDownloader
@@ -20,7 +21,6 @@ SOURCES += main.cpp\
     settingsdialog.cpp \
     ivlefetcher.cpp \
     settings.cpp \
-    json.cpp \
     downloader.cpp \
     recentfileaction.cpp
 
@@ -28,7 +28,6 @@ HEADERS  += mainwindow.h \
     settingsdialog.h \
     ivlefetcher.h \
     settings.h \
-    json.h \
     downloader.h \
     recentfileaction.h
 

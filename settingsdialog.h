@@ -7,9 +7,11 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QtWebKit>
+#include <QtWebkitWidgets>
+#include <QtWidgets>
 #include <QFileDialog>
 #include <QCheckBox>
+#include <QWebView>
 
 namespace Ui {
 class SettingsDialog;

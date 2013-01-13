@@ -9,8 +9,8 @@
 #include <QObject>
 #include <QtXml/QDomDocument>
 #include <QtNetwork>
-#include "json.h"
 #include <QFile>
+#include <QJsonDocument>
 #include "downloader.h"
 
 enum fetchingState{

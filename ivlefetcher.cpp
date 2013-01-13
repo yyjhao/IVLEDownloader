@@ -51,7 +51,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
     if (reply->error() == QNetworkReply::NoError)
     {
         if(p == QString("/api/Lapi.svc/Validate")){
-            QVariantMap map = QtJson::Json::parse(QString(reply->readAll())).toMap();
+            QVariantMap map = QJsonDocument::fromJson(reply->readAll()).toVariant().toMap();
             QString newToken = map.value("Token").toString();
             if(newToken != token){
                 this->token = newToken;
@@ -59,15 +59,15 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             }
             fetchUserInfo();
         }else if(p == QString("/api/Lapi.svc/UserName_Get")){
-            QString re = QString(reply->readAll());
+            QByteArray re = reply->readAll();
             qDebug()<<re;
-            _username = QtJson::Json::parse(re).toString();
+            _username = QJsonDocument::fromJson(re).toVariant().toString();
             qDebug()<<_username;
             emit statusUpdate(gottenUserInfo);
             fetchModules();
         }else if(p == QString("/api/Lapi.svc/Modules")){
             courses.clear();
-            QVariantList courseList = QtJson::Json::parse(QString(reply->readAll())).toMap().value("Results").toList();
+            QVariantList courseList = QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList();
             for(int i = 0; i < courseList.count(); i++){
                 QVariantMap map = courseList[i].toMap();
                 if(map.value("isActive") == QString("Y")){
@@ -80,7 +80,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
         }else if(p == QString("/api/Lapi.svc/Workbins")){
             //if more than 1 workbin, just fetch the first one
             //TODO: multiple workbin support.
-            QVariantList resultsList = QtJson::Json::parse(QString(reply->readAll())).toMap().value("Results").toList();
+            QVariantList resultsList = QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList();
             if(resultsList.count() > 0){
                 //otherwise, no workbin
                 QVariantMap top = jsonToFolder(resultsList[0].toMap());
@@ -93,7 +93,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             fetchWorkBin();
         }else if(p == QString("/api/downloadfile.ashx")){
             updateDownload();
-            emit fileDownloaded(toDownload.value(reply->url().queryItemValue("ID")).toString());
+            emit fileDownloaded(toDownload.value(QUrlQuery(reply->url()).queryItemValue("ID")).toString());
             toDelete = false;
         }else{
             qDebug()<<p;
