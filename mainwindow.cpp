@@ -92,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
     icon = new QSystemTrayIcon(normalIcon, this);
     icon->setContextMenu(trayMenu);
     icon->show();
+    connect(trayMenu, SIGNAL(aboutToShow()), this, SLOT(menuToShow()));
     connect(icon,SIGNAL(activated(QSystemTrayIcon::ActivationReason)),this,SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
 
     if(settings->token().isEmpty() || settings->directory().isEmpty()){
@@ -108,6 +109,10 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason r){
+    icon->setIcon(normalIcon);
+}
+
+void MainWindow::menuToShow(){
     icon->setIcon(normalIcon);
 }
 

@@ -35,13 +35,14 @@ public slots:
     void updateDirectory(const QString&);
     void logDownload(const QString& filename);
     void updateFiles();
-    void iconActivated(QSystemTrayIcon::ActivationReason);
     void createFetcher();
     void updateRecent(const QString& filename);
     void processMaxFileSize(int);
     
 private slots:
     void on_pushButton_clicked();
+    void iconActivated(QSystemTrayIcon::ActivationReason);
+    void menuToShow();
 
 private:
     Ui::MainWindow *ui;
