@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #else
     QAction* setting = new QAction("Settings",this);
 #endif
+    setting->setMenuRole(QAction::NoRole);
     connect(setting,SIGNAL(triggered()),settingsDialog,SLOT(show()));
     trayMenu->addAction(setting);
 
@@ -82,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent) :
     trayMenu->addSeparator();
 
     QAction* quit = new QAction("Quit",this);
+    quit->setMenuRole(QAction::NoRole);
     connect(quit,SIGNAL(triggered()),qApp,SLOT(quit()));
     trayMenu->addAction(quit);
 
