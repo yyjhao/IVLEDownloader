@@ -24,12 +24,11 @@ class SettingsDialog : public QDialog
 public:
     explicit SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
-    QCheckBox* notifyCheck();
 
 public slots:
     void setLabelText(const QString&);
     void setDlText(const QString&);
-    void setMaxFileValue(int val);
+    void setDisplayedSettings(QVariantMap);
 
 protected:
     void closeEvent(QCloseEvent *);
@@ -44,7 +43,7 @@ private slots:
 signals:
     void gottenToken(QString);
     void updateDirectory(QString);
-    void closedWithMaxFileSize(int);
+    void closedWithSettings(QVariantMap);
 
 private:
     Ui::SettingsDialog *ui;

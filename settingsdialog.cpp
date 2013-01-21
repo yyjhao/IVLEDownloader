@@ -33,10 +33,6 @@ void SettingsDialog::onWebviewLoaded(){
     }
 }
 
-QCheckBox* SettingsDialog::notifyCheck(){
-    return ui->checkBox;
-}
-
 void SettingsDialog::on_pushButton_clicked()
 {
     webView->setUrl(QString("https://ivle.nus.edu.sg/api/login/?apikey=%1").arg(APIKEY));
@@ -63,11 +59,17 @@ void SettingsDialog::on_pushButton_2_clicked()
     }
 }
 
-void SettingsDialog::setMaxFileValue(int val){
-    ui->spinBox->setValue(val);
+void SettingsDialog::setDisplayedSettings(QVariantMap m){
+    ui->spinBox->setValue( (int)(m["maxFileSize"].toDouble() / 1024 / 1024) );
+    ui->notifyCheckBox->setCheckState( m["notify"].toBool() ? Qt::Checked : Qt::Unchecked );
+    ui->igUpCheckBox->setCheckState( m["ignoreUploadable"].toBool() ? Qt::Checked : Qt::Unchecked );
 }
 
 void SettingsDialog::closeEvent(QCloseEvent *e){
-    emit closedWithMaxFileSize(ui->spinBox->value());
+    QVariantMap m;
+    m["maxFileSize"] = ui->spinBox->value();
+    m["ignoreUploadable"] = ui->notifyCheckBox->checkState() == Qt::Checked;
+    m["notify"] = ui->igUpCheckBox->checkState() == Qt::Checked;
+    emit closedWithSettings(m);
     QDialog::closeEvent(e);
 }

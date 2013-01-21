@@ -37,7 +37,7 @@ public slots:
     void updateFiles();
     void createFetcher();
     void updateRecent(const QString& filename);
-    void processMaxFileSize(int);
+    void processSettingsDialog(QVariantMap);
     
 private slots:
     void on_pushButton_clicked();

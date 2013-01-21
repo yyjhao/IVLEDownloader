@@ -37,11 +37,21 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
     QVariantList folderlist = map.value("Folders").toList();
     if(folderlist.count() > 0){
         for(int i = 0; i < folderlist.count(); i++){
-            folders.insert(folderlist[i].toMap().value("FolderName").toString(),jsonToFolder(folderlist[i].toMap()));
+            QVariantMap f = folderlist[i].toMap();
+            if(!(f.value("AllowUpload").toBool() && ignoreUploadable)){
+                folders.insert(f.value("FolderName").toString(),jsonToFolder(f));
+            }else{
+                qDebug()<<f.value("FolderName");
+            }
         }
         folder.insert("folders",folders);
     }
     return folder;
+}
+
+void IVLEFetcher::setIgnoreUploadable(bool i){
+    ignoreUploadable = i;
+    qDebug()<<i;
 }
 
 void IVLEFetcher::gotReply(QNetworkReply *reply){

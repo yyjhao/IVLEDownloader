@@ -33,14 +33,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->settingsBut, SIGNAL(clicked()), settingsDialog, SLOT(show()));
 
     settings = new Settings(this);
-    settingsDialog->notifyCheck()->setChecked(settings->notify());
-    settingsDialog->setMaxFileValue(int(settings->maxFileSize() / 1024 / 1024));
+    QVariantMap m;
+    m["notify"] = settings->notify();
+    m["maxFileSize"] = settings->maxFileSize();
+    m["ignoreUploadable"] = settings->ignoreUploadable();
+    settingsDialog->setDisplayedSettings(m);
 
-    connect(settingsDialog->notifyCheck(),SIGNAL(clicked(bool)),settings,SLOT(setNotify(bool)));
     connect(settingsDialog, SIGNAL(gottenToken(QString)), this, SLOT(processToken(QString)));
     connect(settingsDialog,SIGNAL(updateDirectory(QString)),settings,SLOT(setDirectory(QString)));
     connect(settingsDialog,SIGNAL(updateDirectory(QString)),this,SLOT(updateDirectory(QString)));
-    connect(settingsDialog,SIGNAL(closedWithMaxFileSize(int)),this,SLOT(processMaxFileSize(int)));
+    connect(settingsDialog,SIGNAL(closedWithSettings(QVariantMap)),this,SLOT(processSettingsDialog(QVariantMap)));
 
     trayMenu = new QMenu(this);
 
@@ -120,11 +122,17 @@ void MainWindow::menuToShow(){
     icon->setIcon(normalIcon);
 }
 
-void MainWindow::processMaxFileSize(int s){
+void MainWindow::processSettingsDialog(QVariantMap m){
+    double s = m.value("maxFileSize").toDouble();
+    bool i = m.value("ignoreUploadable").toBool();
+    bool n = m.value("notify").toBool();
     //s is in mb
-    double size = (double)s * 1024 * 1024;
+    double size = s * 1024 * 1024;
     settings->setMaxFileSize(size);
     ivlefetcher->setMaxFileSize(size);
+    settings->setIgnoreUploadable(i);
+    ivlefetcher->setIgnoreUploadable(i);
+    settings->setNotify(n);
 }
 
 void MainWindow::updateFiles(){
@@ -180,6 +188,7 @@ void MainWindow::updateRecent(const QString &filename){
 
 void MainWindow::createFetcher(){
     ivlefetcher = new IVLEFetcher(settings->token(), settings->directory(), settings->maxFileSize(), this);
+    ivlefetcher->setIgnoreUploadable(settings->ignoreUploadable());
     connect(ivlefetcher,SIGNAL(statusUpdate(fetchingState)),this,SLOT(updateStatus(fetchingState)));
     connect(ivlefetcher,SIGNAL(tokenUpdated(QString)),this,SLOT(processToken(QString)));
     connect(ivlefetcher,SIGNAL(fileDownloaded(QString)),this,SLOT(logDownload(QString)));

@@ -38,6 +38,7 @@ public:
     QString username();
     int remainingFiles();
     void setMaxFileSize(double);
+    void setIgnoreUploadable(bool);
 
 signals:
     void statusUpdate(fetchingState);
@@ -78,6 +79,7 @@ private:
     QVariantMap toDownload;
     int numOfFiles;
     double maxFileSize;
+    bool ignoreUploadable;
     //set parents of downloader and replies to this so that we can easily terminate a downloading session.
     QObject *session;
     QTimer *timer;

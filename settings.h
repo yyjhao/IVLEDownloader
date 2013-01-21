@@ -21,6 +21,7 @@ public:
     const QStringList& recents();
     void addRecentFile(const QString&);
     double maxFileSize();
+    bool ignoreUploadable();
 
 signals:
     
@@ -29,12 +30,14 @@ public slots:
     void setDirectory(const QString&);
     void setNotify(bool val);
     void setMaxFileSize(double s);
+    void setIgnoreUploadable(bool);
 
 private:
     QSettings* settingsPrivate;
     QString _token;
     QString _directory;
     QStringList _recents;
+    bool _ignoreUploadable;
     bool _notify;
 };
 

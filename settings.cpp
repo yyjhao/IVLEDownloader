@@ -8,6 +8,16 @@ Settings::Settings(QObject *parent) :
     _directory = settingsPrivate->value("directory","").toString();
     _notify = settingsPrivate->value("notify",true).toBool();
     _recents = settingsPrivate->value("recentFiles",QStringList()).toStringList();
+    _ignoreUploadable = settingsPrivate->value("ignoreUploadable", false).toBool();
+}
+
+bool Settings::ignoreUploadable(){
+    return _ignoreUploadable;
+}
+
+void Settings::setIgnoreUploadable(bool i){
+    settingsPrivate->setValue("ignoreUploadable", i);
+    _ignoreUploadable = i;
 }
 
 double Settings::maxFileSize(){
@@ -15,7 +25,7 @@ double Settings::maxFileSize(){
 }
 
 void Settings::setMaxFileSize(double s){
-    return settingsPrivate->setValue("maxFileSize",s);
+    settingsPrivate->setValue("maxFileSize",s);
 }
 
 bool Settings::notify(){
