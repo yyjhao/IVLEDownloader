@@ -43,6 +43,7 @@ private slots:
     void on_pushButton_clicked();
     void iconActivated(QSystemTrayIcon::ActivationReason);
     void menuToShow();
+    void openFolder();
 
 private:
     Ui::MainWindow *ui;

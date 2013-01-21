@@ -44,11 +44,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     trayMenu = new QMenu(this);
 
-    QAction* open = new QAction("Open",this);
-    connect(open,SIGNAL(triggered()),this,SLOT(show()));
+    QAction* main = new QAction("Main",this);
+    connect(main,SIGNAL(triggered()),this,SLOT(show()));
+    trayMenu->addAction(main);
+
+    QAction* open = new QAction("Open Folder", this);
+    connect(open, SIGNAL(triggered()), this, SLOT(openFolder()));
     trayMenu->addAction(open);
 
-#ifdef Q_WS_MAC
+#ifdef Q_OS_MAC
     QAction* setting = new QAction(QString::fromUtf8("Preferences…"),this);
 #else
     QAction* setting = new QAction("Settings",this);
@@ -232,4 +236,8 @@ void MainWindow::on_pushButton_clicked()
     logger->remove();
     logger->open(QIODevice::WriteOnly);
     logger->close();
+}
+
+void MainWindow::openFolder(){
+    QDesktopServices::openUrl(QString("file://") + settings->directory());
 }
