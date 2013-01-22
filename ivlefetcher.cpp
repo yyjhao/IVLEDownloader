@@ -64,7 +64,6 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
                 emit tokenUpdated(newToken);
             }
             fetchUserInfo();
-            fetchAnnouncement();
         }else if(p == QString("/api/Lapi.svc/UserName_Get")){
             QByteArray re = reply->readAll();
             _username = QJsonDocument::fromJson(re).toVariant().toString();
@@ -245,6 +244,7 @@ void IVLEFetcher::fetchUserInfo(){
 void IVLEFetcher::fetchModules(){
     timer->stop();
     emit statusUpdate(gettingWebbinInfo);
+    fetchAnnouncement();
     manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Modules?APIKey=%1&AuthToken=%2&Duration=0&IncludeAllInfo=false&output=json").arg(APIKEY).arg(token))));
 }
 

@@ -74,6 +74,11 @@ MainWindow::MainWindow(QWidget *parent) :
     statusAction->setDisabled(true);
     trayMenu->addAction(statusAction);
 
+    trayMenu->addSeparator();
+
+    announcements = new AnnouncementsMenu(this);
+    trayMenu->addMenu(announcements);
+
     recent = new QMenu("Recently downloaded files",this);
     int l = settings->recents().length();
     for(int i = 0; i < l; i++){
@@ -198,7 +203,7 @@ void MainWindow::createFetcher(){
 }
 
 void MainWindow::processAnnouncements(QVariantList l){
-    qDebug()<<l;
+    announcements->setAnnouncementItems(l);
 }
 
 void MainWindow::updateStatus(fetchingState state){

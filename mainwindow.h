@@ -16,6 +16,7 @@
 #include <QDesktopServices>
 #include <QDateTime>
 #include "recentfileaction.h"
+#include "announcementsmenu.h"
 
 namespace Ui {
 class MainWindow;
@@ -60,6 +61,7 @@ private:
     QIcon attnIcon;
     bool needStart;
     QMenu* recent;
+    AnnouncementsMenu* announcements;
     recentFileAction* recents[MAXRECENT];
 };
 

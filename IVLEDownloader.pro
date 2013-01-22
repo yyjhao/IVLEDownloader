@@ -22,14 +22,18 @@ SOURCES += main.cpp\
     ivlefetcher.cpp \
     settings.cpp \
     downloader.cpp \
-    recentfileaction.cpp
+    recentfileaction.cpp \
+    announcementsmenu.cpp \
+    announcementaction.cpp
 
 HEADERS  += mainwindow.h \
     settingsdialog.h \
     ivlefetcher.h \
     settings.h \
     downloader.h \
-    recentfileaction.h
+    recentfileaction.h \
+    announcementsmenu.h \
+    announcementaction.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui
