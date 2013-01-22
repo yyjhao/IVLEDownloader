@@ -40,8 +40,6 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
             QVariantMap f = folderlist[i].toMap();
             if(!(f.value("AllowUpload").toBool() && ignoreUploadable)){
                 folders.insert(f.value("FolderName").toString(),jsonToFolder(f));
-            }else{
-                qDebug()<<f.value("FolderName");
             }
         }
         folder.insert("folders",folders);
@@ -51,11 +49,9 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
 
 void IVLEFetcher::setIgnoreUploadable(bool i){
     ignoreUploadable = i;
-    qDebug()<<i;
 }
 
 void IVLEFetcher::gotReply(QNetworkReply *reply){
-    qDebug()<<"redirect"<<reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
     bool toDelete = true;
     QString p = reply->url().path();
     if (reply->error() == QNetworkReply::NoError)
@@ -70,9 +66,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             fetchUserInfo();
         }else if(p == QString("/api/Lapi.svc/UserName_Get")){
             QByteArray re = reply->readAll();
-            qDebug()<<re;
             _username = QJsonDocument::fromJson(re).toVariant().toString();
-            qDebug()<<_username;
             emit statusUpdate(gottenUserInfo);
             fetchModules();
         }else if(p == QString("/api/Lapi.svc/Modules")){
@@ -106,13 +100,10 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             emit fileDownloaded(toDownload.value(QUrlQuery(reply->url()).queryItemValue("ID")).toString());
             toDelete = false;
         }else{
-            qDebug()<<p;
-            //qDebug()<< QtJson::Json::parse(QString(reply->readAll()));
         }
     }
     else
     {
-        qDebug()<<reply->errorString();
         // handle errors here
         emit statusUpdate(networkError);
     }
@@ -212,7 +203,6 @@ void IVLEFetcher::fetchWorkBin(){
     }
 }
 void IVLEFetcher::validate(){
-    qDebug()<<APIKEY;
     manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Validate?APIKey=%1&Token=%2&output=json").arg(APIKEY).arg(token))));
 }
 
