@@ -7,7 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_QuitOnClose,false);
-
+    this->setWindowFlags( Qt::WindowStaysOnTopHint);
 
     QDir d = QStandardPaths::standardLocations(QStandardPaths::DataLocation)[0];
     if(!d.exists()){
@@ -28,7 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     needStart = false;
 
-    settingsDialog = new SettingsDialog(this);
+    settingsDialog = new SettingsDialog();
 
     connect(ui->settingsBut, SIGNAL(clicked()), settingsDialog, SLOT(show()));
 
