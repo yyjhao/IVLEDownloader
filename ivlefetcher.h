@@ -45,6 +45,7 @@ signals:
     void tokenUpdated(const QString& token);
     void error(fetchingError);
     void fileDownloaded(const QString &filename);
+    void gotUnreadAnnouncements(QVariantList);
     
 public slots:
     void setDirectory(const QString&);
@@ -62,7 +63,9 @@ private:
     void buildDirectoriesAndDownloadList();
     void fetchWorkbins();
     void fetchWorkBin();
+    void fetchAnnouncement();
     void download();
+    void processAnnouncements(QVariantList);
 
     // remove all empty folders
     // returns the cleaned up file structure

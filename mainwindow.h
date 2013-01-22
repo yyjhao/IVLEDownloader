@@ -44,6 +44,7 @@ private slots:
     void iconActivated(QSystemTrayIcon::ActivationReason);
     void menuToShow();
     void openFolder();
+    void processAnnouncements(QVariantList);
 
 private:
     Ui::MainWindow *ui;

@@ -193,7 +193,12 @@ void MainWindow::createFetcher(){
     connect(ivlefetcher,SIGNAL(tokenUpdated(QString)),this,SLOT(processToken(QString)));
     connect(ivlefetcher,SIGNAL(fileDownloaded(QString)),this,SLOT(logDownload(QString)));
     connect(ivlefetcher,SIGNAL(fileDownloaded(QString)),this,SLOT(updateRecent(QString)));
+    connect(ivlefetcher, SIGNAL(gotUnreadAnnouncements(QVariantList)), this, SLOT(processAnnouncements(QVariantList)));
     ivlefetcher->start();
+}
+
+void MainWindow::processAnnouncements(QVariantList l){
+    qDebug()<<l;
 }
 
 void MainWindow::updateStatus(fetchingState state){

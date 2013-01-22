@@ -64,6 +64,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
                 emit tokenUpdated(newToken);
             }
             fetchUserInfo();
+            fetchAnnouncement();
         }else if(p == QString("/api/Lapi.svc/UserName_Get")){
             QByteArray re = reply->readAll();
             _username = QJsonDocument::fromJson(re).toVariant().toString();
@@ -99,7 +100,10 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             updateDownload();
             emit fileDownloaded(toDownload.value(QUrlQuery(reply->url()).queryItemValue("ID")).toString());
             toDelete = false;
+        }else if(p == QString("/api/Lapi.svc/Announcements_Unread")){
+            processAnnouncements(QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList());
         }else{
+            qDebug()<<p<<reply->readAll();
         }
     }
     else
@@ -110,6 +114,29 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
     if(toDelete){
         reply->deleteLater();
     }
+}
+
+void IVLEFetcher::processAnnouncements(QVariantList l){
+    QVariantList out;
+    QVariantMap cur, curOut;
+    for(int i = 0; i < l.size(); i++){
+        cur = l[i].toMap();
+        QVariantList an = cur["Announcements"].toList();
+        if(an.size() == 0)continue;
+        QDateTime date = an[0].toMap()["CreatedDate_js"].toDateTime();
+        for(int j = 1; j < an.size(); j++){
+            QDateTime d = an[i].toMap()["CreatedDate_js"].toDateTime();
+            if(d > date){
+                date = d;
+            }
+        }
+        curOut = QVariantMap();
+        curOut["latest_date"] = date;
+        curOut["course"] = cur["CourseCode"].toString();
+        curOut["url"] = QString("https://ivle.nus.edu.sg/announcement/popup_list.aspx?CourseID=%1").arg(cur["ID"].toString());
+        out.push_back(curOut);
+    }
+    emit(gotUnreadAnnouncements(out));
 }
 
 QString IVLEFetcher::username(){
@@ -202,6 +229,11 @@ void IVLEFetcher::fetchWorkBin(){
         buildDirectoriesAndDownloadList();
     }
 }
+
+void IVLEFetcher::fetchAnnouncement(){
+    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Announcements_Unread?APIKey=%1&AuthToken=%2&TitleOnly=true&output=json").arg(APIKEY).arg(token))));
+}
+
 void IVLEFetcher::validate(){
     manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Validate?APIKey=%1&Token=%2&output=json").arg(APIKEY).arg(token))));
 }
