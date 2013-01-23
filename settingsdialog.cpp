@@ -64,6 +64,7 @@ void SettingsDialog::setDisplayedSettings(QVariantMap m){
     ui->spinBox->setValue( (int)(m["maxFileSize"].toDouble() / 1024 / 1024) );
     ui->notifyCheckBox->setCheckState( m["notify"].toBool() ? Qt::Checked : Qt::Unchecked );
     ui->igUpCheckBox->setCheckState( m["ignoreUploadable"].toBool() ? Qt::Checked : Qt::Unchecked );
+    ui->notifyAnmCheckBox->setCheckState( m["notifyAnm"].toBool() ? Qt::Checked : Qt::Unchecked );
 }
 
 void SettingsDialog::closeEvent(QCloseEvent *e){
@@ -71,6 +72,7 @@ void SettingsDialog::closeEvent(QCloseEvent *e){
     m["maxFileSize"] = ui->spinBox->value();
     m["ignoreUploadable"] = ui->notifyCheckBox->checkState() == Qt::Checked;
     m["notify"] = ui->igUpCheckBox->checkState() == Qt::Checked;
+    m["notifyAnm"] = ui->notifyAnmCheckBox->checkState() == Qt::Checked;
     emit closedWithSettings(m);
     QDialog::closeEvent(e);
 }

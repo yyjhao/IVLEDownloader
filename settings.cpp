@@ -7,8 +7,10 @@ Settings::Settings(QObject *parent) :
     _token = settingsPrivate->value("token","").toString();
     _directory = settingsPrivate->value("directory","").toString();
     _notify = settingsPrivate->value("notify",true).toBool();
+    _notifyAnnouncement = settingsPrivate->value("notifyAnnouncement",true).toBool();
     _recents = settingsPrivate->value("recentFiles",QStringList()).toStringList();
     _ignoreUploadable = settingsPrivate->value("ignoreUploadable", false).toBool();
+    _lastAnnouncementTime = settingsPrivate->value("lastAnnouncementTime", QDateTime::currentDateTime()).toDateTime();
 }
 
 bool Settings::ignoreUploadable(){
@@ -35,6 +37,15 @@ bool Settings::notify(){
 void Settings::setNotify(bool val){
     settingsPrivate->setValue("notify",val);
     _notify = val;
+}
+
+bool Settings::notifyAnnouncement(){
+    return _notifyAnnouncement;
+}
+
+void Settings::setNotifyAnnouncement(bool val){
+    settingsPrivate->setValue("notifyAnnouncement",val);
+    _notifyAnnouncement = val;
 }
 
 QString Settings::token(){
@@ -67,3 +78,14 @@ void Settings::addRecentFile(const QString &f){
     _recents.push_front(f);
     settingsPrivate->setValue("recentFiles",_recents);
 }
+
+QDateTime Settings::lastAnnouncementTime(){
+    return _lastAnnouncementTime;
+}
+
+void Settings::setLastAnnouncementTime(QDateTime d){
+    _lastAnnouncementTime = d;
+    settingsPrivate->setValue("lastAnnouncementTime", d);
+}
+
+

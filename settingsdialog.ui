@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>314</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -89,15 +89,18 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QCheckBox" name="notifyCheckBox">
-       <property name="text">
-        <string>Notify me when new files are downloaded.</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QCheckBox" name="notifyCheckBox">
+     <property name="text">
+      <string>Notify me when new files are downloaded.</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="notifyAnmCheckBox">
+     <property name="text">
+      <string>Notify me when there are new unread announcements</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QCheckBox" name="igUpCheckBox">

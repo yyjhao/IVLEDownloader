@@ -37,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m["notify"] = settings->notify();
     m["maxFileSize"] = settings->maxFileSize();
     m["ignoreUploadable"] = settings->ignoreUploadable();
+    m["notifyAnm"] = settings->notifyAnnouncement();
     settingsDialog->setDisplayedSettings(m);
 
     connect(settingsDialog, SIGNAL(gottenToken(QString)), this, SLOT(processToken(QString)));
@@ -138,6 +139,7 @@ void MainWindow::processSettingsDialog(QVariantMap m){
     settings->setIgnoreUploadable(i);
     ivlefetcher->setIgnoreUploadable(i);
     settings->setNotify(n);
+    settings->setNotifyAnnouncement(m.value("notifyAnm").toBool());
 }
 
 void MainWindow::updateFiles(){
@@ -204,6 +206,19 @@ void MainWindow::createFetcher(){
 
 void MainWindow::processAnnouncements(QVariantList l){
     announcements->setAnnouncementItems(l);
+    QDateTime d;
+    for(int i = 0; i < l.size(); i++){
+        QVariantMap m = l[i].toMap();
+        if(d < m["latest_date"].toDateTime()){
+            d = m["latest_date"].toDateTime();
+        }
+    }
+    if(d > settings->lastAnnouncementTime()){
+        settings->setLastAnnouncementTime(d);
+        if(settings->notifyAnnouncement()){
+            icon->setIcon(attnIcon);
+        }
+    }
 }
 
 void MainWindow::updateStatus(fetchingState state){

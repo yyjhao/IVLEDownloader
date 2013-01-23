@@ -1,5 +1,6 @@
 /*
  * A wrapper around QSettings to store configurations
+ * Could perhaps be simplified
  * By Yao Yujian
  */
 
@@ -9,6 +10,7 @@
 #include <QObject>
 #include <QSettings>
 #include <QStringList>
+#include <QDateTime>
 
 class Settings : public QObject
 {
@@ -22,6 +24,8 @@ public:
     void addRecentFile(const QString&);
     double maxFileSize();
     bool ignoreUploadable();
+    bool notifyAnnouncement();
+    QDateTime lastAnnouncementTime();
 
 signals:
     
@@ -31,6 +35,8 @@ public slots:
     void setNotify(bool val);
     void setMaxFileSize(double s);
     void setIgnoreUploadable(bool);
+    void setNotifyAnnouncement(bool);
+    void setLastAnnouncementTime(QDateTime);
 
 private:
     QSettings* settingsPrivate;
@@ -39,6 +45,8 @@ private:
     QStringList _recents;
     bool _ignoreUploadable;
     bool _notify;
+    bool _notifyAnnouncement;
+    QDateTime _lastAnnouncementTime;
 };
 
 #endif // SETTINGS_H
