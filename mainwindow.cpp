@@ -5,9 +5,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    this->setWindowFlags((Qt::WindowFlags) (Qt::Window | Qt::WindowStaysOnTopHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint  & (~Qt::WindowFullscreenButtonHint)) );
     ui->setupUi(this);
     this->setAttribute(Qt::WA_QuitOnClose,false);
-    this->setWindowFlags( Qt::WindowStaysOnTopHint);
 
     QDir d = QStandardPaths::standardLocations(QStandardPaths::DataLocation)[0];
     if(!d.exists()){
