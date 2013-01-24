@@ -39,7 +39,7 @@ public:
     int remainingFiles();
     void setMaxFileSize(double);
     void setIgnoreUploadable(bool);
-    void setExtraDownloads(QVariantMap&);
+    void setExtraDownloads(const QVariantMap&);
 
 signals:
     void statusUpdate(fetchingState);
@@ -97,6 +97,7 @@ private:
     // url: (course name, folder (can be .), exec)
     QMap<QString, QMap<QString, QString> > extrasInfo;
     int extrasToFetch;
+    QSet<QString> allCourseNames;
 };
 
 #endif // IVLEFETCHER_H

@@ -26,14 +26,14 @@ void IVLEFetcher::start(){
     validate();
 }
 
-void IVLEFetcher::setExtraDownloads(QVariantMap& m){
+void IVLEFetcher::setExtraDownloads(const QVariantMap& m){
     extrasInfo.clear();
     // ignore any other 'folders' if . is present
-    for(QVariantMap::iterator it = m.begin(); it != m.end(); it++){
+    for(QVariantMap::const_iterator it = m.begin(); it != m.end(); it++){
         QString name = it.key();
         QVariantMap mm = it.value().toMap();
         QMap<QString, QString> item;
-        if(mm["."].toMap().isEmpty()){
+        if(!mm.contains(".")){
             for(QVariantMap::iterator itt = mm.begin(); itt != mm.end(); itt++){
                 item["name"] = name;
                 item["folder"] = itt.key();
@@ -48,6 +48,7 @@ void IVLEFetcher::setExtraDownloads(QVariantMap& m){
             extrasInfo[info["page"].toString()] = item;
         }
     }
+    qDebug()<<m<<extrasInfo;
 }
 
 QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
@@ -106,11 +107,14 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
                 QVariantMap map = courseList[i].toMap();
                 if(map.value("isActive") == QString("Y")){
                     QVariantMap course;
-                    course.insert("name",map.value("CourseCode").toString().replace('/',"-"));
+                    QString name = map.value("CourseCode").toString().replace('/',"-");
+                    allCourseNames.insert(name);
+                    course.insert("name",name);
                     courses.insert(map.value("ID").toString(), course);
                 }
             }
             fetchWorkbins();
+            fetchExtras();
         }else if(p == QString("/api/Lapi.svc/Workbins")){
             //if more than 1 workbin, just fetch the first one
             //TODO: multiple workbin support.
@@ -320,16 +324,18 @@ void IVLEFetcher::fetchModules(){
     timer->stop();
     emit statusUpdate(gettingWebbinInfo);
     fetchAnnouncement();
-    fetchExtras();
     manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Modules?APIKey=%1&AuthToken=%2&Duration=0&IncludeAllInfo=false&output=json").arg(APIKEY).arg(token))));
 }
 
 void IVLEFetcher::fetchExtras(){
     extras.clear();
     QStringList k = extrasInfo.keys();
-    extrasToFetch = k.size();
-    for(int i = 0; i < extrasToFetch; i++){
-        manager->get(QNetworkRequest(QUrl(k[i])));
+    extrasToFetch = 0;
+    for(int i = 0; i < k.size(); i++){
+        if(allCourseNames.contains(extrasInfo[k[i]]["name"])){
+            manager->get(QNetworkRequest(QUrl(k[i])));
+            extrasToFetch++;
+        }
     }
     if(extrasToFetch == 0){
         extraReady();
