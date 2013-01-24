@@ -1,11 +1,17 @@
+/*
+ * It has almost come to the point where I should refactor this
+ * Notice the word "almost"
+ */
+
 #include "ivlefetcher.h"
 #include <QDebug>
 
-IVLEFetcher::IVLEFetcher(QString token, QString dir, double maxfilesize, QObject *parent) :
+IVLEFetcher::IVLEFetcher(QString token, QVariantMap extras, QString dir, double maxfilesize, QObject *parent) :
     QObject(parent)
 {
     this->token = token;
-     this->path = QDir(dir);
+    this->path = QDir(dir);
+    setExtraDownloads(extras);
     manager = new QNetworkAccessManager(this);
     connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(gotReply(QNetworkReply*)));
     session = new QObject(this);
@@ -18,6 +24,30 @@ IVLEFetcher::IVLEFetcher(QString token, QString dir, double maxfilesize, QObject
 void IVLEFetcher::start(){
     emit statusUpdate(gettingUserInfo);
     validate();
+}
+
+void IVLEFetcher::setExtraDownloads(QVariantMap& m){
+    extrasInfo.clear();
+    // ignore any other 'folders' if . is present
+    for(QVariantMap::iterator it = m.begin(); it != m.end(); it++){
+        QString name = it.key();
+        QVariantMap mm = it.value().toMap();
+        QMap<QString, QString> item;
+        if(mm["."].toMap().isEmpty()){
+            for(QVariantMap::iterator itt = mm.begin(); itt != mm.end(); itt++){
+                item["name"] = name;
+                item["folder"] = itt.key();
+                item["exec"] = itt.value().toMap()["exec"].toString();
+                extrasInfo[itt.value().toMap()["page"].toString()] = item;
+            }
+        }else{
+            QVariantMap info = mm["."].toMap();
+            item["name"] = name;
+            item["folder"] = ".";
+            item["exec"] = info["exec"].toString();
+            extrasInfo[info["page"].toString()] = item;
+        }
+    }
 }
 
 QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
@@ -101,6 +131,8 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             toDelete = false;
         }else if(p == QString("/api/Lapi.svc/Announcements_Unread")){
             processAnnouncements(QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList());
+        }else if(extrasInfo.contains(reply->url().toString())){
+            qDebug()<<extrasInfo[reply->url().toString()]<<reply->url();
         }else{
             qDebug()<<p<<reply->readAll();
         }
@@ -170,6 +202,34 @@ void IVLEFetcher::exploreFolder(QDir& path, const QVariantMap& map){
     path.cdUp();
 }
 
+QVariantMap IVLEFetcher::mergeFiles(const QVariantMap &f1, const QVariantMap &f2){
+    if(f1.empty())return f2;
+    else if(f2.empty())return f1;
+    return f1;
+}
+
+QVariantMap IVLEFetcher::mergeFileSystems(const QVariantMap &f1, const QVariantMap &f2){
+    if(f1.empty())return QVariantMap(f2);
+    else if(f2.empty())return QVariantMap(f1);
+    QVariantMap r;
+    r["files"] = mergeFiles(f1["files"].toMap(), f2["files"].toMap());
+    QVariantMap fd1 = f1["folders"].toMap(), fd2 = f2["folders"].toMap(), rfd;
+    QStringList k1 = f1.keys(), k2 = f2.keys();
+    int i1 = 0, i2 = 0, s1 = k1.size(), s2 = k2.size();
+    while(i1 < s1 && i2 < s2){
+        if(k1[i1] < k2[i2]){
+            rfd[k1[i1]] = fd1[k1[i1]];
+            i1++;
+        }else if(k2[i2] < k1[i1]){
+            rfd[k2[i2]] = fd2[k2[i2]];
+        }else{
+            rfd[k1[i1]] = mergeFileSystems(fd1[k1[i1]].toMap(), fd2[k2[i2]].toMap());
+        }
+    }
+    r["folders"] = rfd;
+    return r;
+}
+
 QVariantMap IVLEFetcher::cleanFileSystem(const QVariantMap& filesystem){
     QVariantMap folders = filesystem["folders"].toMap();
     QStringList keys = folders.keys();
@@ -192,6 +252,21 @@ QVariantMap IVLEFetcher::cleanFileSystem(const QVariantMap& filesystem){
     return result;
 }
 
+void IVLEFetcher::workbinReady(){
+    isWorkbinReady = true;
+    if(isExtraReady){
+        buildDirectoriesAndDownloadList();
+    }
+}
+
+void IVLEFetcher::extraReady(){
+    isExtraReady = true;
+    if(isWorkbinReady){
+        buildDirectoriesAndDownloadList();
+    }
+}
+
+
 void IVLEFetcher::buildDirectoriesAndDownloadList(){
     QVariantMap::Iterator it;
     QString name;
@@ -200,7 +275,7 @@ void IVLEFetcher::buildDirectoriesAndDownloadList(){
     for(it = courses.begin(); it != courses.end(); it++){
         course = it.value().toMap();
         name = course.value("name").toString();
-        filesystem = cleanFileSystem(course.value("filesystem").toMap());
+        filesystem = cleanFileSystem(mergeFileSystems(course.value("filesystem").toMap(), extras[name].toMap()));
         // module has no files, skip
         if(filesystem.isEmpty())continue;
         if(!path.exists(name)){
@@ -225,7 +300,7 @@ void IVLEFetcher::fetchWorkBin(){
     if(currentWebBinFetching < courses.count()){
         manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Workbins?APIKey=%1&AuthToken=%2&output=json&CourseID=%3&Duration=0").arg(APIKEY).arg(token).arg(courses.keys()[currentWebBinFetching]))));
     }else{
-        buildDirectoriesAndDownloadList();
+        workbinReady();
     }
 }
 
@@ -245,7 +320,20 @@ void IVLEFetcher::fetchModules(){
     timer->stop();
     emit statusUpdate(gettingWebbinInfo);
     fetchAnnouncement();
+    fetchExtras();
     manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Modules?APIKey=%1&AuthToken=%2&Duration=0&IncludeAllInfo=false&output=json").arg(APIKEY).arg(token))));
+}
+
+void IVLEFetcher::fetchExtras(){
+    extras.clear();
+    QStringList k = extrasInfo.keys();
+    extrasToFetch = k.size();
+    for(int i = 0; i < extrasToFetch; i++){
+        manager->get(QNetworkRequest(QUrl(k[i])));
+    }
+    if(extrasToFetch == 0){
+        extraReady();
+    }
 }
 
 void IVLEFetcher::download(){

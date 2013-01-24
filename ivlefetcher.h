@@ -34,11 +34,12 @@ class IVLEFetcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit IVLEFetcher(QString, QString, double, QObject *parent = 0);
+    explicit IVLEFetcher(QString, QVariantMap, QString, double, QObject *parent = 0);
     QString username();
     int remainingFiles();
     void setMaxFileSize(double);
     void setIgnoreUploadable(bool);
+    void setExtraDownloads(QVariantMap&);
 
 signals:
     void statusUpdate(fetchingState);
@@ -64,8 +65,13 @@ private:
     void fetchWorkbins();
     void fetchWorkBin();
     void fetchAnnouncement();
+    void fetchExtras();
     void download();
+    QVariantMap mergeFileSystems(const QVariantMap&, const QVariantMap&);
+    QVariantMap mergeFiles(const QVariantMap&, const QVariantMap&);
     void processAnnouncements(QVariantList);
+    void workbinReady();
+    void extraReady();
 
     // remove all empty folders
     // returns the cleaned up file structure
@@ -78,6 +84,7 @@ private:
     QString _username;
     QNetworkAccessManager* manager;
     QVariantMap courses;
+    QVariantMap extras;
     int currentWebBinFetching;
     QVariantMap toDownload;
     int numOfFiles;
@@ -86,6 +93,10 @@ private:
     //set parents of downloader and replies to this so that we can easily terminate a downloading session.
     QObject *session;
     QTimer *timer;
+    bool isWorkbinReady, isExtraReady;
+    // url: (course name, folder (can be .), exec)
+    QMap<QString, QMap<QString, QString> > extrasInfo;
+    int extrasToFetch;
 };
 
 #endif // IVLEFETCHER_H

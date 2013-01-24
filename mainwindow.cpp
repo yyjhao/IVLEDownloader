@@ -194,7 +194,7 @@ void MainWindow::updateRecent(const QString &filename){
 }
 
 void MainWindow::createFetcher(){
-    ivlefetcher = new IVLEFetcher(settings->token(), settings->directory(), settings->maxFileSize(), this);
+    ivlefetcher = new IVLEFetcher(settings->token(), QVariantMap(), settings->directory(), settings->maxFileSize(), this);
     ivlefetcher->setIgnoreUploadable(settings->ignoreUploadable());
     connect(ivlefetcher,SIGNAL(statusUpdate(fetchingState)),this,SLOT(updateStatus(fetchingState)));
     connect(ivlefetcher,SIGNAL(tokenUpdated(QString)),this,SLOT(processToken(QString)));
