@@ -1,6 +1,6 @@
 #include "settings.h"
 
-Settings::Settings(QObject *parent) :
+Settings::Settings(QDir baseDir, QObject *parent) :
     QObject(parent)
 {
     settingsPrivate = new QSettings("YYJHAO","IVLEDownloader");
@@ -11,6 +11,19 @@ Settings::Settings(QObject *parent) :
     _recents = settingsPrivate->value("recentFiles",QStringList()).toStringList();
     _ignoreUploadable = settingsPrivate->value("ignoreUploadable", false).toBool();
     _lastAnnouncementTime = settingsPrivate->value("lastAnnouncementTime", QDateTime::currentDateTime()).toDateTime();
+    pagesInfoFile = new QFile(baseDir.filePath("pagesInfo.json"), this);
+    if(!pagesInfoFile->exists()){
+        pagesInfoFile->open(QIODevice::WriteOnly);
+        pagesInfoFile->close();
+    }else{
+        pagesInfoFile->open(QIODevice::ReadOnly);
+        _pagesInfo = QJsonDocument::fromJson(pagesInfoFile->readAll()).toVariant().toMap();
+        pagesInfoFile->close();
+   }
+}
+
+QVariantMap Settings::pagesInfo(){
+    return _pagesInfo;
 }
 
 bool Settings::ignoreUploadable(){

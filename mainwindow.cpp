@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->settingsBut, SIGNAL(clicked()), settingsDialog, SLOT(show()));
 
-    settings = new Settings(this);
+    settings = new Settings(d, this);
     QVariantMap m;
     m["notify"] = settings->notify();
     m["maxFileSize"] = settings->maxFileSize();
@@ -194,8 +194,7 @@ void MainWindow::updateRecent(const QString &filename){
 }
 
 void MainWindow::createFetcher(){
-    QVariantMap extras = QJsonDocument::fromJson("{\"CS2100\": {\"Lecture\": {\"page\": \"http://www.comp.nus.edu.sg/~cs2100/2_resources/lectures.html\", \"exec\": \"exec cs2100 lecture\"}, \"Tutorial\": {\"page\": \"http://www.comp.nus.edu.sg/~cs2100/3_ca/tutorials.html\", \"exec\": \"tut\"} }, \"CS9999\": {\".\": {\"page\": \"http://google.com\", \"exec\": \"asdf\"} } }").toVariant().toMap();
-    ivlefetcher = new IVLEFetcher(settings->token(), extras, settings->directory(), settings->maxFileSize(), this);
+    ivlefetcher = new IVLEFetcher(settings->token(), settings->pagesInfo(), settings->directory(), settings->maxFileSize(), this);
     ivlefetcher->setIgnoreUploadable(settings->ignoreUploadable());
     connect(ivlefetcher,SIGNAL(statusUpdate(fetchingState)),this,SLOT(updateStatus(fetchingState)));
     connect(ivlefetcher,SIGNAL(tokenUpdated(QString)),this,SLOT(processToken(QString)));

@@ -11,12 +11,16 @@
 #include <QSettings>
 #include <QStringList>
 #include <QDateTime>
+#include <QJsonDocument>
+#include <QDir>
+#include <QFile>
+#include <QVariant>
 
 class Settings : public QObject
 {
     Q_OBJECT
 public:
-    explicit Settings(QObject *parent = 0);
+    explicit Settings(QDir baseDir, QObject *parent = 0);
     QString token();
     QString directory();
     bool notify();
@@ -26,6 +30,7 @@ public:
     bool ignoreUploadable();
     bool notifyAnnouncement();
     QDateTime lastAnnouncementTime();
+    QVariantMap pagesInfo();
 
 signals:
     
@@ -47,6 +52,8 @@ private:
     bool _notify;
     bool _notifyAnnouncement;
     QDateTime _lastAnnouncementTime;
+    QVariantMap _pagesInfo;
+    QFile* pagesInfoFile;
 };
 
 #endif // SETTINGS_H
