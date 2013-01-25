@@ -29,25 +29,33 @@ void IVLEFetcher::start(){
 
 void IVLEFetcher::setExtraDownloads(const QVariantMap& m){
     extrasInfo.clear();
+    namedExtrasInfo.clear();
     // ignore any other 'folders' if . is present
     for(QVariantMap::const_iterator it = m.begin(); it != m.end(); it++){
         QString name = it.key();
         QVariantMap mm = it.value().toMap();
         QMap<QString, QString> item;
+        QString page;
+        QList<QString> nameList;
         if(!mm.contains(".")){
             for(QVariantMap::iterator itt = mm.begin(); itt != mm.end(); itt++){
                 item["name"] = name;
                 item["folder"] = itt.key();
                 item["exec"] = itt.value().toMap()["exec"].toString();
-                extrasInfo[itt.value().toMap()["page"].toString()] = item;
+                page = itt.value().toMap()["page"].toString();
+                extrasInfo[page] = item;
+                nameList.push_back(page);
             }
         }else{
             QVariantMap info = mm["."].toMap();
             item["name"] = name;
             item["folder"] = ".";
             item["exec"] = info["exec"].toString();
-            extrasInfo[info["page"].toString()] = item;
+            page = info["page"].toString();
+            extrasInfo[page] = item;
+            nameList.push_back(page);
         }
+        namedExtrasInfo[name] = nameList;
     }
 }
 
@@ -136,6 +144,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
             parsePage(reply->readAll(), m["name"], m["folder"], m["exec"], reply->url());
         }else if(toDownload.contains(reply->url().toString())){
             updateDownload();
+            qDebug()<<"reply from download "<<reply->url();
             emit fileDownloaded(toDownload[reply->url().toString()].toString());
             toDelete = false;
         }else{
@@ -153,7 +162,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
 }
 
 void IVLEFetcher::parsePage(const QByteArray& content, const QString& course, const QString& folder, const QString& exec, QUrl baseUrl){
-    // strangely if baseUrl is set here, the relative href cannot be fetched by javascript queryselectoralls
+    // strangely if baseUrl is set here, the relative href cannot be fetched by javascript queryselectorall
     page->mainFrame()->setHtml(content);
     QVariant result = page->mainFrame()->evaluateJavaScript(exec);
     result = resolveRelFileUrls(result.toMap(), baseUrl);
@@ -168,7 +177,6 @@ void IVLEFetcher::parsePage(const QByteArray& content, const QString& course, co
     }
 }
 
-// support only one level of folder
 QVariantMap IVLEFetcher::resolveRelFileUrls(const QVariantMap& folder, const QUrl& base){
     if(folder.empty()){
         return folder;
@@ -181,6 +189,13 @@ QVariantMap IVLEFetcher::resolveRelFileUrls(const QVariantMap& folder, const QUr
     }
     QVariantMap r;
     r["files"] = newFiles;
+
+    QVariantMap folders = folder["folders"].toMap();
+    QVariantMap newFolders;
+    for(it = folders.begin(); it != folders.end(); it++){
+        newFolders[it.key()] = resolveRelFileUrls(it.value().toMap(), base);
+    }
+    r["folders"] = newFolders;
     return r;
 }
 
@@ -259,7 +274,7 @@ QVariantMap IVLEFetcher::mergeFileSystems(const QVariantMap &f1, const QVariantM
     QVariantMap r;
     r["files"] = mergeFiles(f1["files"].toMap(), f2["files"].toMap());
     QVariantMap fd1 = f1["folders"].toMap(), fd2 = f2["folders"].toMap(), rfd;
-    QStringList k1 = f1.keys(), k2 = f2.keys();
+    QStringList k1 = fd1.keys(), k2 = fd2.keys();
     int i1 = 0, i2 = 0, s1 = k1.size(), s2 = k2.size();
     while(i1 < s1 && i2 < s2){
         if(k1[i1] < k2[i2]){
@@ -267,9 +282,20 @@ QVariantMap IVLEFetcher::mergeFileSystems(const QVariantMap &f1, const QVariantM
             i1++;
         }else if(k2[i2] < k1[i1]){
             rfd[k2[i2]] = fd2[k2[i2]];
+            i2++;
         }else{
             rfd[k1[i1]] = mergeFileSystems(fd1[k1[i1]].toMap(), fd2[k2[i2]].toMap());
+            i1++;
+            i2++;
         }
+    }
+    while(i1 < s1){
+        rfd[k1[i1]] = fd1[k1[i1]];
+        i1++;
+    }
+    while(i2 < s2){
+        rfd[k2[i2]] = fd2[k2[i2]];
+        i2++;
     }
     r["folders"] = rfd;
     return r;
@@ -302,6 +328,7 @@ void IVLEFetcher::workbinReady(){
     if(isExtraReady){
         buildDirectoriesAndDownloadList();
     }
+    qDebug()<<"Workbin Ready "<<extrasToFetch;
 }
 
 void IVLEFetcher::extraReady(){
@@ -309,6 +336,7 @@ void IVLEFetcher::extraReady(){
     if(isWorkbinReady){
         buildDirectoriesAndDownloadList();
     }
+    qDebug()<<"Extras Ready "<<currentWebBinFetching;
 }
 
 
@@ -321,6 +349,8 @@ void IVLEFetcher::buildDirectoriesAndDownloadList(){
         course = it.value().toMap();
         name = course.value("name").toString();
         filesystem = cleanFileSystem(mergeFileSystems(course.value("filesystem").toMap(), extras[name].toMap()));
+        if(name == QString("CS2100"))
+            qDebug()<<filesystem;
         // module has no files, skip
         if(filesystem.isEmpty())continue;
         if(!path.exists(name)){
@@ -370,12 +400,14 @@ void IVLEFetcher::fetchModules(){
 
 void IVLEFetcher::fetchExtras(){
     extras.clear();
-    QStringList k = extrasInfo.keys();
     extrasToFetch = 0;
-    for(int i = 0; i < k.size(); i++){
-        if(allCourseNames.contains(extrasInfo[k[i]]["name"])){
-            manager->get(QNetworkRequest(QUrl(k[i])));
-            extrasToFetch++;
+    for(QSet<QString>::iterator it = allCourseNames.begin(); it != allCourseNames.end(); it++){
+        if(namedExtrasInfo.contains(*it)){
+            QList<QString> l = namedExtrasInfo[*it];
+            for(QList<QString>::iterator itt = l.begin(); itt != l.end(); itt++){
+                manager->get(QNetworkRequest(QUrl(*itt)));
+                extrasToFetch++;
+            }
         }
     }
     if(extrasToFetch == 0){

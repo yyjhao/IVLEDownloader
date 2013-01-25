@@ -101,6 +101,7 @@ private:
     bool isWorkbinReady, isExtraReady;
     // url: (course name, folder (can be .), exec)
     QMap<QString, QMap<QString, QString> > extrasInfo;
+    QMap<QString, QList<QString> > namedExtrasInfo;
     int extrasToFetch;
     QSet<QString> allCourseNames;
     QWebPage* page;
