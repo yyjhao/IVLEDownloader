@@ -16,6 +16,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     webviewDialog->layout()->addWidget(webView);
     webviewDialog->layout()->setMargin(0);
     connect(webView, SIGNAL(loadFinished(bool)), this, SLOT(onWebviewLoaded()));
+
+    adialog = new AdvancedDialog(this);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -75,4 +77,9 @@ void SettingsDialog::closeEvent(QCloseEvent *e){
     m["notifyAnm"] = ui->notifyAnmCheckBox->checkState() == Qt::Checked;
     emit closedWithSettings(m);
     QDialog::closeEvent(e);
+}
+
+void SettingsDialog::on_pushButton_3_clicked()
+{
+    adialog->show();
 }

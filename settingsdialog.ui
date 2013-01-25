@@ -162,6 +162,13 @@
      </property>
     </spacer>
    </item>
+   <item>
+    <widget class="QPushButton" name="pushButton_3">
+     <property name="text">
+      <string>Extremely hacky advance stuff</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources>

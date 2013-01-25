@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QCheckBox>
 #include <QWebView>
+#include "advanceddialog.h"
 
 namespace Ui {
 class SettingsDialog;
@@ -40,6 +41,8 @@ private slots:
 
     void on_pushButton_2_clicked();
 
+    void on_pushButton_3_clicked();
+
 signals:
     void gottenToken(QString);
     void updateDirectory(QString);
@@ -49,6 +52,7 @@ private:
     Ui::SettingsDialog *ui;
     QWebView* webView;
     QDialog* webviewDialog;
+    AdvancedDialog* adialog;
 };
 
 #endif // SETTINGSDIALOG_H

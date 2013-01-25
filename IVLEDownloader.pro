@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     downloader.cpp \
     recentfileaction.cpp \
     announcementsmenu.cpp \
-    announcementaction.cpp
+    announcementaction.cpp \
+    advanceddialog.cpp
 
 HEADERS  += mainwindow.h \
     settingsdialog.h \
@@ -33,10 +34,12 @@ HEADERS  += mainwindow.h \
     downloader.h \
     recentfileaction.h \
     announcementsmenu.h \
-    announcementaction.h
+    announcementaction.h \
+    advanceddialog.h
 
 FORMS    += mainwindow.ui \
-    settingsdialog.ui
+    settingsdialog.ui \
+    advanceddialog.ui
 
 RESOURCES += \
     res.qrc
