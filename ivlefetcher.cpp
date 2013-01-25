@@ -165,6 +165,7 @@ void IVLEFetcher::parsePage(const QByteArray& content, const QString& course, co
     // strangely if baseUrl is set here, the relative href cannot be fetched by javascript queryselectorall
     page->mainFrame()->setHtml(content);
     QVariant result = page->mainFrame()->evaluateJavaScript(exec);
+    page->mainFrame()->setHtml("");
     result = resolveRelFileUrls(result.toMap(), baseUrl);
     if(folder == QString(".")){
         extras[course] = result;
