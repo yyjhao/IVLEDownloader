@@ -106,6 +106,9 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
         }else if(p == QString("/api/Lapi.svc/UserName_Get")){
             QByteArray re = reply->readAll();
             _username = QJsonDocument::fromJson(re).toVariant().toString();
+            if(_username.isEmpty()){
+                _username = QString(re).remove('"');
+            }
             emit statusUpdate(gottenUserInfo);
             fetchModules();
         }else if(p == QString("/api/Lapi.svc/Modules")){
@@ -154,6 +157,7 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
     else
     {
         // handle errors here
+        qDebug()<<"Error "<<reply->url()<<reply->error();
         emit statusUpdate(networkError);
     }
     if(toDelete){
