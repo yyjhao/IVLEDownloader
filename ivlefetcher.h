@@ -11,6 +11,8 @@
 #include <QtNetwork>
 #include <QFile>
 #include <QJsonDocument>
+#include <QWebPage>
+#include <QWebFrame>
 #include "downloader.h"
 
 enum fetchingState{
@@ -72,6 +74,9 @@ private:
     void processAnnouncements(QVariantList);
     void workbinReady();
     void extraReady();
+    void parsePage(const QByteArray &content, const QString &course, const QString &folder, const QString &exec, QUrl baseUrl);
+    QVariantMap resolveRelFileUrls(const QVariantMap&, const QUrl&);
+    QString getWorkBinDownloadUrl(const QString&);
 
     // remove all empty folders
     // returns the cleaned up file structure
@@ -98,6 +103,7 @@ private:
     QMap<QString, QMap<QString, QString> > extrasInfo;
     int extrasToFetch;
     QSet<QString> allCourseNames;
+    QWebPage* page;
 };
 
 #endif // IVLEFETCHER_H

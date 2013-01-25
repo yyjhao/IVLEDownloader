@@ -18,7 +18,7 @@ public:
     ~Downloader();
     
 signals:
-    void done();
+    void done(QString);
     void progress(qint64 now, qint64 total);
 public slots:
 

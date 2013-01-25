@@ -19,6 +19,7 @@ IVLEFetcher::IVLEFetcher(QString token, QVariantMap extras, QString dir, double 
     timer = new QTimer(this);
     timer->setSingleShot(true);
     connect(timer,SIGNAL(timeout()),this,SLOT(fetchModules()));
+    page = new QWebPage(this);
 }
 
 void IVLEFetcher::start(){
@@ -48,7 +49,6 @@ void IVLEFetcher::setExtraDownloads(const QVariantMap& m){
             extrasInfo[info["page"].toString()] = item;
         }
     }
-    qDebug()<<m<<extrasInfo;
 }
 
 QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
@@ -60,7 +60,7 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
             //ignore files that are too big
             file.insert("name",fileJS.value("FileName"));
             file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
-            files.insert(fileJS.value("ID").toString(),file);
+            files.insert(getWorkBinDownloadUrl(fileJS.value("ID").toString()),file);
         }
     }
     folder.insert("files",files);
@@ -129,16 +129,17 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
                 courses.insert(key,tmp);
             }
             fetchWorkBin();
-        }else if(p == QString("/api/downloadfile.ashx")){
-            updateDownload();
-            emit fileDownloaded(toDownload.value(QUrlQuery(reply->url()).queryItemValue("ID")).toString());
-            toDelete = false;
         }else if(p == QString("/api/Lapi.svc/Announcements_Unread")){
             processAnnouncements(QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList());
         }else if(extrasInfo.contains(reply->url().toString())){
-            qDebug()<<extrasInfo[reply->url().toString()]<<reply->url();
+            QMap<QString, QString> &m = extrasInfo[reply->url().toString()];
+            parsePage(reply->readAll(), m["name"], m["folder"], m["exec"], reply->url());
+        }else if(toDownload.contains(reply->url().toString())){
+            updateDownload();
+            emit fileDownloaded(toDownload[reply->url().toString()].toString());
+            toDelete = false;
         }else{
-            qDebug()<<p<<reply->readAll();
+            qDebug()<<"reply: "<<p;
         }
     }
     else
@@ -149,6 +150,38 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
     if(toDelete){
         reply->deleteLater();
     }
+}
+
+void IVLEFetcher::parsePage(const QByteArray& content, const QString& course, const QString& folder, const QString& exec, QUrl baseUrl){
+    // strangely if baseUrl is set here, the relative href cannot be fetched by javascript queryselectoralls
+    page->mainFrame()->setHtml(content);
+    QVariant result = page->mainFrame()->evaluateJavaScript(exec);
+    result = resolveRelFileUrls(result.toMap(), baseUrl);
+    if(folder == QString(".")){
+        extras[course] = result;
+    }else{
+        QVariantMap c = extras[course].toMap();
+        QVariantMap f = c["folders"].toMap();
+        f[folder] = result;
+        c["folders"] = f;
+        extras[course] = c;
+    }
+}
+
+// support only one level of folder
+QVariantMap IVLEFetcher::resolveRelFileUrls(const QVariantMap& folder, const QUrl& base){
+    if(folder.empty()){
+        return folder;
+    }
+    QVariantMap files = folder["files"].toMap();
+    QVariantMap newFiles;
+    QVariantMap::iterator it;
+    for(it = files.begin(); it != files.end(); it++){
+        newFiles[base.resolved(it.key()).toString()] = it.value();
+    }
+    QVariantMap r;
+    r["files"] = newFiles;
+    return r;
 }
 
 void IVLEFetcher::processAnnouncements(QVariantList l){
@@ -209,7 +242,15 @@ void IVLEFetcher::exploreFolder(QDir& path, const QVariantMap& map){
 QVariantMap IVLEFetcher::mergeFiles(const QVariantMap &f1, const QVariantMap &f2){
     if(f1.empty())return f2;
     else if(f2.empty())return f1;
-    return f1;
+    QVariantMap m;
+    QVariantMap::const_iterator it;
+    for(it = f1.begin(); it != f1.end(); it++){
+        m[it.key()] = it.value();
+    }
+    for(it = f2.begin(); it != f2.end(); it++){
+        m[it.key()] = it.value();
+    }
+    return m;
 }
 
 QVariantMap IVLEFetcher::mergeFileSystems(const QVariantMap &f1, const QVariantMap &f2){
@@ -342,17 +383,20 @@ void IVLEFetcher::fetchExtras(){
     }
 }
 
+QString IVLEFetcher::getWorkBinDownloadUrl(const QString& id){
+    return QString("https://ivle.nus.edu.sg/api/downloadfile.ashx?APIKey=%1&AuthToken=%2&ID=%3&target=workbin").arg(APIKEY).arg(token).arg(id);
+}
+
 void IVLEFetcher::download(){
     emit statusUpdate(downloading);
     numOfFiles = 0;
     for(QVariantMap::Iterator it = toDownload.begin(); it != toDownload.end(); it++){
-        QNetworkReply *re = manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/downloadfile.ashx?APIKey=%1&AuthToken=%2&ID=%3&target=workbin").arg(APIKEY).arg(token).arg(it.key()))));
+        QNetworkReply *re = manager->get(QNetworkRequest(QUrl(it.key())));
         re->setParent(session);
         Downloader* dl = new Downloader(it.value().toString(),re,session);
         numOfFiles++;
     }
     updateDownload();
-    //qDebug()<<toDownload.value(toDownload.keys()[0]);
 }
 
 void IVLEFetcher::updateDownload(){

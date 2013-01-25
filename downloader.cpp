@@ -21,6 +21,7 @@ Downloader::~Downloader(){
 void Downloader::finished(){
     file->rename(file->fileName().replace(QString(".ivledl"),QString("")));
     file->close();
+    emit done(reply->url().toString());
     this->deleteLater();
 }
 
