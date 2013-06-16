@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     announcementaction.cpp \
     advanceddialog.cpp \
     lapi.cpp \
-    promise.cpp
+    promise.cpp \
+    externalpageparser.cpp
 
 HEADERS  += mainwindow.h \
     settingsdialog.h \
@@ -41,7 +42,8 @@ HEADERS  += mainwindow.h \
     announcementaction.h \
     advanceddialog.h \
     lapi.h \
-    promise.h
+    promise.h \
+    externalpageparser.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \

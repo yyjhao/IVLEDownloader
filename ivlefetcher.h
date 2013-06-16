@@ -15,6 +15,7 @@
 #include <QWebFrame>
 #include "downloader.h"
 #include "lapi.h"
+#include "externalpageparser.h"
 
 enum fetchingState{
     gettingUserInfo,
@@ -37,7 +38,7 @@ class IVLEFetcher : public QObject
 {
     Q_OBJECT
 public:
-    explicit IVLEFetcher(QString, QVariantMap, QString, double, QObject *parent = 0);
+    explicit IVLEFetcher(QString, ExternalPageParser*, QString, double, QObject *parent = 0);
     QString username();
     void setMaxFileSize(double);
     void setIgnoreUploadable(bool);
@@ -58,12 +59,9 @@ public slots:
 
 private:
     void buildDirectoriesAndDownloadList();
-    void download();
     QVariantMap mergeFileSystems(const QVariantMap&, const QVariantMap&);
     QVariantMap mergeFiles(const QVariantMap&, const QVariantMap&);
     void processAnnouncements(QVariantList);
-    void parsePage(const QByteArray &content, const QString &course, const QString &folder, const QString &exec, QUrl baseUrl);
-    QVariantMap resolveRelFileUrls(const QVariantMap&, const QUrl&);
     QVariantMap toDownload;
 
     QVariantMap cleanFileSystem(const QVariantMap&);
@@ -75,7 +73,6 @@ private:
     QString _username;
     QVariantMap courses;
     QVariantMap extras;
-    int currentWebBinFetching;
     int numOfFiles;
 
     double maxFileSize;
@@ -84,11 +81,8 @@ private:
     QObject *session;
     QTimer *timer;
     // url: (course name, folder (can be .), exec)
-    QMap<QString, QMap<QString, QString> > extrasInfo;
-    QMap<QString, QList<QString> > namedExtrasInfo;
-    QSet<QString> allCourseNames;
-
     Lapi* api;
+    ExternalPageParser* parser;
 };
 
 #endif // IVLEFETCHER_H

@@ -6,12 +6,12 @@
 #include "ivlefetcher.h"
 #include <QDebug>
 
-IVLEFetcher::IVLEFetcher(QString token, QVariantMap extras, QString dir, double maxfilesize, QObject *parent) :
+IVLEFetcher::IVLEFetcher(QString token, ExternalPageParser* parser, QString dir, double maxfilesize, QObject *parent) :
     QObject(parent)
 {
     this->token = token;
     this->path = QDir(dir);
-    setExtraDownloads(extras);
+    this->parser = parser;
     session = new QObject(this);
     this->maxFileSize = maxfilesize;
     timer = new QTimer(this);
@@ -94,38 +94,6 @@ void IVLEFetcher::start(){
     });
 }
 
-void IVLEFetcher::setExtraDownloads(const QVariantMap& m){
-    extrasInfo.clear();
-    namedExtrasInfo.clear();
-    // ignore any other 'folders' if . is present
-    for(QVariantMap::const_iterator it = m.begin(); it != m.end(); it++){
-        QString name = it.key();
-        QVariantMap mm = it.value().toMap();
-        QMap<QString, QString> item;
-        QString page;
-        QList<QString> nameList;
-        if(!mm.contains(".")){
-            for(QVariantMap::iterator itt = mm.begin(); itt != mm.end(); itt++){
-                item["name"] = name;
-                item["folder"] = itt.key();
-                item["exec"] = itt.value().toMap()["exec"].toString();
-                page = itt.value().toMap()["page"].toString();
-                extrasInfo[page] = item;
-                nameList.push_back(page);
-            }
-        }else{
-            QVariantMap info = mm["."].toMap();
-            item["name"] = name;
-            item["folder"] = ".";
-            item["exec"] = info["exec"].toString();
-            page = info["page"].toString();
-            extrasInfo[page] = item;
-            nameList.push_back(page);
-        }
-        namedExtrasInfo[name] = nameList;
-    }
-}
-
 QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
     QVariantList filelist = map.value("Files").toList();
     QVariantMap files,folder;
@@ -155,28 +123,6 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
 
 void IVLEFetcher::setIgnoreUploadable(bool i){
     ignoreUploadable = i;
-}
-
-QVariantMap IVLEFetcher::resolveRelFileUrls(const QVariantMap& folder, const QUrl& base){
-    if(folder.empty()){
-        return folder;
-    }
-    QVariantMap files = folder["files"].toMap();
-    QVariantMap newFiles;
-    QVariantMap::iterator it;
-    for(it = files.begin(); it != files.end(); it++){
-        newFiles[base.resolved(it.key()).toString()] = it.value();
-    }
-    QVariantMap r;
-    r["files"] = newFiles;
-
-    QVariantMap folders = folder["folders"].toMap();
-    QVariantMap newFolders;
-    for(it = folders.begin(); it != folders.end(); it++){
-        newFolders[it.key()] = resolveRelFileUrls(it.value().toMap(), base);
-    }
-    r["folders"] = newFolders;
-    return r;
 }
 
 void IVLEFetcher::processAnnouncements(QVariantList l){

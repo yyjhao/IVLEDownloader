@@ -38,6 +38,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m["maxFileSize"] = settings->maxFileSize();
     m["ignoreUploadable"] = settings->ignoreUploadable();
     m["notifyAnm"] = settings->notifyAnnouncement();
+
+    parser = new ExternalPageParser(settings->pagesInfo());
+
     settingsDialog->setDisplayedSettings(m);
 
     connect(settingsDialog, SIGNAL(gottenToken(QString)), this, SLOT(processToken(QString)));
@@ -120,7 +123,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason r){
+void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason){
     icon->setIcon(normalIcon);
 }
 
@@ -190,7 +193,7 @@ void MainWindow::updateRecent(const QString &filename){
 }
 
 void MainWindow::createFetcher(){
-    ivlefetcher = new IVLEFetcher(settings->token(), settings->pagesInfo(), settings->directory(), settings->maxFileSize(), this);
+    ivlefetcher = new IVLEFetcher(settings->token(), parser, settings->directory(), settings->maxFileSize(), this);
     ivlefetcher->setIgnoreUploadable(settings->ignoreUploadable());
     connect(ivlefetcher,SIGNAL(statusUpdate(fetchingState)),this,SLOT(updateStatus(fetchingState)));
     connect(ivlefetcher,SIGNAL(tokenUpdated(QString)),this,SLOT(processToken(QString)));
