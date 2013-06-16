@@ -27,6 +27,9 @@ void IVLEFetcher::start(){
             token = t;
             emit tokenUpdated(token);
         }
+        api->fetchAnnouncement()->then([=](const QVariant& data){
+            processAnnouncements(data.toMap().value("Results").toList());
+        });
     })->pipe([=](const QVariant&){
         emit statusUpdate(gettingUserInfo);
         return api->fetchUserInfo()->then([=](const QVariant& data){
