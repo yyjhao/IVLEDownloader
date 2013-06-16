@@ -17,7 +17,6 @@ public:
     typedef std::function<Promise*(const QVariant&)> Monad;
     explicit Promise(QObject *parent = 0);
     explicit Promise(QList<Promise*>, QObject *parent = 0);
-    explicit Promise(const QList<std::function<Promise*(const QVariant&)>>&, QObject *parent = 0);
     State state();
     Promise* pipe(const Monad&, const Monad&);
     Promise* pipe(const Monad&);
@@ -35,13 +34,13 @@ signals:
 public slots:
     void resolve(const QVariant& = QVariant());
     void reject(const QVariant& = QVariant());
+    void advance(const QVariant& = QVariant());
 
 private:
     State s;
     int tasksCount;
     QVariantList datas;
-    QList<std::function<Promise* (const QVariant&)>> tasks;
-    void step(const QVariant&);
+    QVariant data;
 };
 
 #endif // PROMISE_H

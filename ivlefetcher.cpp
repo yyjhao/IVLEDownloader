@@ -76,7 +76,10 @@ void IVLEFetcher::start(){
             re->setParent(session);
             Downloader* dl = new Downloader(it.value().toString(),re,session);
             numOfFiles++;
-            ps.push_back(dl->getPromise());
+            ps.push_back(dl->getPromise()->then([=](const QVariant&){
+                numOfFiles--;
+                emit statusUpdate(remainingChange);
+            }));
         }
         return new Promise(ps, this->session);
     })->then([=](const QVariant& data){
@@ -314,28 +317,6 @@ void IVLEFetcher::buildDirectoriesAndDownloadList(){
     }
     emit statusUpdate(gottenWebbinInfo);
 }
-
-void IVLEFetcher::download(){
-//     emit statusUpdate(downloading);
-//     numOfFiles = 0;
-//     for(QVariantMap::Iterator it = toDownload.begin(); it != toDownload.end(); it++){
-//         QNetworkReply *re = manager->get(QNetworkRequest(QUrl(it.key())));
-//         re->setParent(session);
-//         Downloader* dl = new Downloader(it.value().toString(),re,session);
-//         numOfFiles++;
-//     }
-//     updateDownload();
-}
-
-// void IVLEFetcher::updateDownload(){
-//     if(numOfFiles == 0){
-//         emit statusUpdate(complete);
-//         timer->start(300000);
-//     }else{
-//         emit statusUpdate(remainingChange);
-//     }
-//     numOfFiles--;
-// }
 
 int IVLEFetcher::remainingFiles(){
     return numOfFiles;
