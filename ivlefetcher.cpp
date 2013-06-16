@@ -12,19 +12,80 @@ IVLEFetcher::IVLEFetcher(QString token, QVariantMap extras, QString dir, double 
     this->token = token;
     this->path = QDir(dir);
     setExtraDownloads(extras);
-    manager = new QNetworkAccessManager(this);
-    connect(manager,SIGNAL(finished(QNetworkReply*)),this,SLOT(gotReply(QNetworkReply*)));
     session = new QObject(this);
     this->maxFileSize = maxfilesize;
     timer = new QTimer(this);
     timer->setSingleShot(true);
-    connect(timer,SIGNAL(timeout()),this,SLOT(fetchModules()));
-    page = new QWebPage(this);
+
+    api = new Lapi(token, this);
 }
 
 void IVLEFetcher::start(){
-    emit statusUpdate(gettingUserInfo);
-    validate();
+    api->validate()->then([=](const QVariant& data){
+        auto t = data.toString();
+        if(t != token){
+            token = t;
+            emit tokenUpdated(token);
+        }
+    })->pipe([=](const QVariant&){
+        emit statusUpdate(gettingUserInfo);
+        return api->fetchUserInfo()->then([=](const QVariant& data){
+            qDebug()<<data;
+            _username = data.toString();
+            emit statusUpdate(gottenUserInfo);
+        });
+    })->pipe([=](const QVariant&){
+        return api->fetchModules();
+    })->pipe([=](const QVariant& data){
+        emit statusUpdate(gettingWebbinInfo);
+        QVariantList modules = data.toMap().value("Results").toList();
+        QList<Promise*> ps;
+        for(auto module : modules){
+            QVariantMap map = module.toMap();
+            if(map.value("isActive") == QString("Y")){
+                QVariantMap course;
+                QString id = map.value("ID").toString();
+                QString name = map.value("CourseCode").toString().replace('/',"-");
+                ps.push_back(api->fetchWorkbin(id)->then([=](const QVariant& data){
+                    QVariantList resultsList = data.toMap().value("Results").toList();
+                    int c = 0;
+                    for(auto workbin : resultsList){
+                        QVariantMap course;
+                        if(c){
+                            course["name"] = QString("%1-%2").arg(name).arg(c + 1);
+                        }else{
+                            course["name"] = name;
+                        }
+                        course["filesystem"] = jsonToFolder(workbin.toMap());
+                        courses[id] = course;
+                        c++;
+                    }
+                }));
+            }
+        }
+        return new Promise(ps, this);            
+    })->pipe([=](const QVariant&){
+        emit statusUpdate(gottenWebbinInfo);
+        buildDirectoriesAndDownloadList();
+        emit statusUpdate(downloading);
+        numOfFiles = 0;
+        auto manager = api->getManager();
+        QList<Promise*> ps;
+        for(auto it = toDownload.begin(); it != toDownload.end(); it++){
+            QNetworkReply *re = manager->get(QNetworkRequest(QUrl(it.key())));
+            re->setParent(session);
+            Downloader* dl = new Downloader(it.value().toString(),re,session);
+            numOfFiles++;
+            ps.push_back(dl->getPromise());
+        }
+        return new Promise(ps, this->session);
+    })->then([=](const QVariant& data){
+        emit statusUpdate(complete);
+        qDebug()<<data;
+    }, [=](const QVariant& error){
+        qDebug()<<error;
+        emit statusUpdate(networkError);
+    });
 }
 
 void IVLEFetcher::setExtraDownloads(const QVariantMap& m){
@@ -68,7 +129,7 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
             //ignore files that are too big
             file.insert("name",fileJS.value("FileName"));
             file.insert("uploadTime",fileJS.value("UploadTime_js").toDate());
-            files.insert(getWorkBinDownloadUrl(fileJS.value("ID").toString()),file);
+            files.insert(api->getWorkBinDownloadUrl(fileJS.value("ID").toString()),file);
         }
     }
     folder.insert("files",files);
@@ -88,102 +149,6 @@ QVariantMap IVLEFetcher::jsonToFolder(const QVariantMap& map){
 
 void IVLEFetcher::setIgnoreUploadable(bool i){
     ignoreUploadable = i;
-}
-
-void IVLEFetcher::gotReply(QNetworkReply *reply){
-    bool toDelete = true;
-    QString p = reply->url().path();
-    if (reply->error() == QNetworkReply::NoError)
-    {
-        if(p == QString("/api/Lapi.svc/Validate")){
-            QVariantMap map = QJsonDocument::fromJson(reply->readAll()).toVariant().toMap();
-            QString newToken = map.value("Token").toString();
-            if(newToken != token){
-                this->token = newToken;
-                emit tokenUpdated(newToken);
-            }
-            fetchUserInfo();
-        }else if(p == QString("/api/Lapi.svc/UserName_Get")){
-            QByteArray re = reply->readAll();
-            _username = QJsonDocument::fromJson(re).toVariant().toString();
-            if(_username.isEmpty()){
-                _username = QString(re).remove('"');
-            }
-            emit statusUpdate(gottenUserInfo);
-            fetchModules();
-        }else if(p == QString("/api/Lapi.svc/Modules")){
-            courses.clear();
-            QVariantList courseList = QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList();
-            for(int i = 0; i < courseList.count(); i++){
-                QVariantMap map = courseList[i].toMap();
-                if(map.value("isActive") == QString("Y")){
-                    QVariantMap course;
-                    QString name = map.value("CourseCode").toString().replace('/',"-");
-                    allCourseNames.insert(name);
-                    course.insert("name",name);
-                    courses.insert(map.value("ID").toString(), course);
-                }
-            }
-            fetchWorkbins();
-            fetchExtras();
-        }else if(p == QString("/api/Lapi.svc/Workbins")){
-            //if more than 1 workbin, just fetch the first one
-            //TODO: multiple workbin support.
-            QVariantList resultsList = QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList();
-            if(resultsList.count() > 0){
-                //otherwise, no workbin
-                QVariantMap top = jsonToFolder(resultsList[0].toMap());
-                QString key = courses.keys()[currentWebBinFetching];
-                QVariantMap tmp = courses.value(key).toMap();
-                courses.remove(key);
-                tmp.insert("filesystem",top);
-                courses.insert(key,tmp);
-            }
-            fetchWorkBin();
-        }else if(p == QString("/api/Lapi.svc/Announcements_Unread")){
-            processAnnouncements(QJsonDocument::fromJson(reply->readAll()).toVariant().toMap().value("Results").toList());
-        }else if(extrasInfo.contains(reply->url().toString())){
-            QMap<QString, QString> &m = extrasInfo[reply->url().toString()];
-            parsePage(reply->readAll(), m["name"], m["folder"], m["exec"], reply->url());
-            extrasToFetch--;
-            if(!extrasToFetch){
-                extraReady();
-            }
-        }else if(toDownload.contains(reply->url().toString())){
-            updateDownload();
-            qDebug()<<"reply from download "<<reply->url();
-            emit fileDownloaded(toDownload[reply->url().toString()].toString());
-            toDelete = false;
-        }else{
-            qDebug()<<"reply: "<<p;
-        }
-    }
-    else
-    {
-        // handle errors here
-        qDebug()<<"Error "<<reply->url()<<reply->error();
-        emit statusUpdate(networkError);
-    }
-    if(toDelete){
-        reply->deleteLater();
-    }
-}
-
-void IVLEFetcher::parsePage(const QByteArray& content, const QString& course, const QString& folder, const QString& exec, QUrl baseUrl){
-    // strangely if baseUrl is set here, the relative href cannot be fetched by javascript queryselectorall
-    page->mainFrame()->setHtml(content);
-    QVariant result = page->mainFrame()->evaluateJavaScript(exec);
-    page->mainFrame()->setHtml("");
-    result = resolveRelFileUrls(result.toMap(), baseUrl);
-    if(folder == QString(".")){
-        extras[course] = result;
-    }else{
-        QVariantMap c = extras[course].toMap();
-        QVariantMap f = c["folders"].toMap();
-        f[folder] = result;
-        c["folders"] = f;
-        extras[course] = c;
-    }
 }
 
 QVariantMap IVLEFetcher::resolveRelFileUrls(const QVariantMap& folder, const QUrl& base){
@@ -278,8 +243,8 @@ QVariantMap IVLEFetcher::mergeFiles(const QVariantMap &f1, const QVariantMap &f2
 }
 
 QVariantMap IVLEFetcher::mergeFileSystems(const QVariantMap &f1, const QVariantMap &f2){
-    if(f1.empty())return QVariantMap(f2);
-    else if(f2.empty())return QVariantMap(f1);
+    if(f1.empty())return f2;
+    else if(f2.empty())return f1;
     QVariantMap r;
     r["files"] = mergeFiles(f1["files"].toMap(), f2["files"].toMap());
     QVariantMap fd1 = f1["folders"].toMap(), fd2 = f2["folders"].toMap(), rfd;
@@ -332,34 +297,11 @@ QVariantMap IVLEFetcher::cleanFileSystem(const QVariantMap& filesystem){
     return result;
 }
 
-void IVLEFetcher::workbinReady(){
-    isWorkbinReady = true;
-    if(isExtraReady){
-        buildDirectoriesAndDownloadList();
-    }
-    qDebug()<<"Workbin Ready "<<extrasToFetch;
-}
-
-void IVLEFetcher::extraReady(){
-    isExtraReady = true;
-    if(isWorkbinReady){
-        buildDirectoriesAndDownloadList();
-    }
-    qDebug()<<"Extras Ready "<<currentWebBinFetching;
-}
-
-
 void IVLEFetcher::buildDirectoriesAndDownloadList(){
-    QVariantMap::Iterator it;
-    QString name;
-    QVariantMap filesystem, course;
-    toDownload.clear();
-    for(it = courses.begin(); it != courses.end(); it++){
-        course = it.value().toMap();
-        name = course.value("name").toString();
-        filesystem = cleanFileSystem(mergeFileSystems(course.value("filesystem").toMap(), extras[name].toMap()));
-        if(name == QString("CS2100"))
-            qDebug()<<filesystem;
+    for(auto c : courses){
+        auto course = c.toMap();
+        QString name = course["name"].toString();
+        auto filesystem = cleanFileSystem(mergeFileSystems(course.value("filesystem").toMap(), extras[name].toMap()));
         // module has no files, skip
         if(filesystem.isEmpty())continue;
         if(!path.exists(name)){
@@ -371,84 +313,29 @@ void IVLEFetcher::buildDirectoriesAndDownloadList(){
         exploreFolder(path, filesystem);
     }
     emit statusUpdate(gottenWebbinInfo);
-    download();
-}
-
-void IVLEFetcher::fetchWorkbins(){
-    currentWebBinFetching = -1;
-    fetchWorkBin();
-}
-
-void IVLEFetcher::fetchWorkBin(){
-    currentWebBinFetching++;
-    if(currentWebBinFetching < courses.count()){
-        manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Workbins?APIKey=%1&AuthToken=%2&output=json&CourseID=%3&Duration=0").arg(APIKEY).arg(token).arg(courses.keys()[currentWebBinFetching]))));
-    }else{
-        workbinReady();
-    }
-}
-
-void IVLEFetcher::fetchAnnouncement(){
-    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Announcements_Unread?APIKey=%1&AuthToken=%2&TitleOnly=true&output=json").arg(APIKEY).arg(token))));
-}
-
-void IVLEFetcher::validate(){
-    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Validate?APIKey=%1&Token=%2&output=json").arg(APIKEY).arg(token))));
-}
-
-void IVLEFetcher::fetchUserInfo(){
-    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/UserName_Get?APIKey=%1&Token=%2").arg(APIKEY).arg(token))));
-}
-
-void IVLEFetcher::fetchModules(){
-    timer->stop();
-    emit statusUpdate(gettingWebbinInfo);
-    fetchAnnouncement();
-    manager->get(QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/Modules?APIKey=%1&AuthToken=%2&Duration=0&IncludeAllInfo=false&output=json").arg(APIKEY).arg(token))));
-}
-
-void IVLEFetcher::fetchExtras(){
-    extras.clear();
-    extrasToFetch = 0;
-    for(QSet<QString>::iterator it = allCourseNames.begin(); it != allCourseNames.end(); it++){
-        if(namedExtrasInfo.contains(*it)){
-            QList<QString> l = namedExtrasInfo[*it];
-            for(QList<QString>::iterator itt = l.begin(); itt != l.end(); itt++){
-                manager->get(QNetworkRequest(QUrl(*itt)));
-                extrasToFetch++;
-            }
-        }
-    }
-    if(extrasToFetch == 0){
-        extraReady();
-    }
-}
-
-QString IVLEFetcher::getWorkBinDownloadUrl(const QString& id){
-    return QString("https://ivle.nus.edu.sg/api/downloadfile.ashx?APIKey=%1&AuthToken=%2&ID=%3&target=workbin").arg(APIKEY).arg(token).arg(id);
 }
 
 void IVLEFetcher::download(){
-    emit statusUpdate(downloading);
-    numOfFiles = 0;
-    for(QVariantMap::Iterator it = toDownload.begin(); it != toDownload.end(); it++){
-        QNetworkReply *re = manager->get(QNetworkRequest(QUrl(it.key())));
-        re->setParent(session);
-        Downloader* dl = new Downloader(it.value().toString(),re,session);
-        numOfFiles++;
-    }
-    updateDownload();
+//     emit statusUpdate(downloading);
+//     numOfFiles = 0;
+//     for(QVariantMap::Iterator it = toDownload.begin(); it != toDownload.end(); it++){
+//         QNetworkReply *re = manager->get(QNetworkRequest(QUrl(it.key())));
+//         re->setParent(session);
+//         Downloader* dl = new Downloader(it.value().toString(),re,session);
+//         numOfFiles++;
+//     }
+//     updateDownload();
 }
 
-void IVLEFetcher::updateDownload(){
-    if(numOfFiles == 0){
-        emit statusUpdate(complete);
-        timer->start(300000);
-    }else{
-        emit statusUpdate(remainingChange);
-    }
-    numOfFiles--;
-}
+// void IVLEFetcher::updateDownload(){
+//     if(numOfFiles == 0){
+//         emit statusUpdate(complete);
+//         timer->start(300000);
+//     }else{
+//         emit statusUpdate(remainingChange);
+//     }
+//     numOfFiles--;
+// }
 
 int IVLEFetcher::remainingFiles(){
     return numOfFiles;
@@ -459,6 +346,7 @@ void IVLEFetcher::setToken(const QString &t){
         delete session;
         session = new QObject(this);
         this->token = t;
+        this->api->setToken(t);
         this->start();
     }
 }

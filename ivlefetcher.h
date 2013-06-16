@@ -14,6 +14,7 @@
 #include <QWebPage>
 #include <QWebFrame>
 #include "downloader.h"
+#include "lapi.h"
 
 enum fetchingState{
     gettingUserInfo,
@@ -38,10 +39,10 @@ class IVLEFetcher : public QObject
 public:
     explicit IVLEFetcher(QString, QVariantMap, QString, double, QObject *parent = 0);
     QString username();
-    int remainingFiles();
     void setMaxFileSize(double);
     void setIgnoreUploadable(bool);
     void setExtraDownloads(const QVariantMap&);
+    int remainingFiles();
 
 signals:
     void statusUpdate(fetchingState);
@@ -54,32 +55,17 @@ public slots:
     void setDirectory(const QString&);
     void setToken(const QString&);
     void start();
-    void fetchModules();
-
-private slots:
-    void gotReply(QNetworkReply*);
-    void updateDownload();
 
 private:
-    void validate();
-    void fetchUserInfo();
     void buildDirectoriesAndDownloadList();
-    void fetchWorkbins();
-    void fetchWorkBin();
-    void fetchAnnouncement();
-    void fetchExtras();
     void download();
     QVariantMap mergeFileSystems(const QVariantMap&, const QVariantMap&);
     QVariantMap mergeFiles(const QVariantMap&, const QVariantMap&);
     void processAnnouncements(QVariantList);
-    void workbinReady();
-    void extraReady();
     void parsePage(const QByteArray &content, const QString &course, const QString &folder, const QString &exec, QUrl baseUrl);
     QVariantMap resolveRelFileUrls(const QVariantMap&, const QUrl&);
-    QString getWorkBinDownloadUrl(const QString&);
+    QVariantMap toDownload;
 
-    // remove all empty folders
-    // returns the cleaned up file structure
     QVariantMap cleanFileSystem(const QVariantMap&);
     QVariantMap jsonToFolder(const QVariantMap&);
     void exploreFolder(QDir&, const QVariantMap&);
@@ -87,24 +73,22 @@ private:
     QString token;
     QDir path;
     QString _username;
-    QNetworkAccessManager* manager;
     QVariantMap courses;
     QVariantMap extras;
     int currentWebBinFetching;
-    QVariantMap toDownload;
     int numOfFiles;
+
     double maxFileSize;
     bool ignoreUploadable;
     //set parents of downloader and replies to this so that we can easily terminate a downloading session.
     QObject *session;
     QTimer *timer;
-    bool isWorkbinReady, isExtraReady;
     // url: (course name, folder (can be .), exec)
     QMap<QString, QMap<QString, QString> > extrasInfo;
     QMap<QString, QList<QString> > namedExtrasInfo;
-    int extrasToFetch;
     QSet<QString> allCourseNames;
-    QWebPage* page;
+
+    Lapi* api;
 };
 
 #endif // IVLEFETCHER_H

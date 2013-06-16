@@ -144,11 +144,7 @@ void MainWindow::processSettingsDialog(QVariantMap m){
 
 void MainWindow::updateFiles(){
     if(ivlefetcher != NULL){
-        if(needStart){
-            ivlefetcher->start();
-        }else{
-            ivlefetcher->fetchModules();
-        }
+        ivlefetcher->start();
         updateAction->setDisabled(true);
     }
 }
@@ -157,7 +153,7 @@ void MainWindow::logDownload(const QString &filename){
     qDebug()<<filename;
     logger->open(QIODevice::Append);
     QString toAdd = QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm") + "\t" + filename + "\n";
-    logger->write(toAdd.toStdString().c_str());
+    logger->write(toAdd.toUtf8());
     logger->close();
     ui->plainTextEdit->setPlainText(ui->plainTextEdit->toPlainText() + toAdd);
     ui->plainTextEdit->scroll(0,ui->plainTextEdit->height());

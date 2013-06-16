@@ -20,7 +20,7 @@ Promise* Lapi::validate()
             }
             p->resolve(this->token);
         }else{
-            p->reject(QVariant("test"));
+            p->reject(QVariant("invalid token"));
         }
     }, [=](QNetworkReply::NetworkError err){
         p->reject(QVariant(err));
@@ -60,7 +60,10 @@ void Lapi::ajaxGet(const QNetworkRequest& re,
     auto r = manager->get(re);
     connect(r, &QNetworkReply::finished, [=](){
         if (r->error() == QNetworkReply::NoError){
-            success(QJsonDocument::fromJson(r->readAll()).toVariant());
+            QByteArray re = r->readAll();
+            auto data = QJsonDocument::fromJson(re).toVariant();
+            if(data.isValid()) success(data);
+            else success(QString(re).remove('"'));
         }else{
             failure(r->error());
         }
@@ -86,9 +89,19 @@ QNetworkRequest Lapi::genRequest(const QString& service, const QString& addition
     if(!additionalQuery.isEmpty()){
         addition = QString("&") + additionalQuery;
     }
-    return QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/%1?APIKey=%2&AuthToken=%3&output=json%4")
+    return QNetworkRequest(QUrl(QString("https://ivle.nus.edu.sg/api/Lapi.svc/%1?APIKey=%2&Token=%3&AuthToken=%3&output=json%4")
             .arg(service)
             .arg(APIKEY)
             .arg(token)
             .arg(addition)));
+}
+
+void Lapi::setToken(const QString& t)
+{
+    token = t;
+}
+
+QNetworkAccessManager* Lapi::getManager()
+{
+    return manager;
 }

@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QtNetwork>
 #include <QFile>
+#include "promise.h"
 
 class Downloader : public QObject
 {
@@ -16,6 +17,8 @@ class Downloader : public QObject
 public:
     explicit Downloader(QString filePath, QNetworkReply*, QObject *parent = 0);
     ~Downloader();
+
+    Promise* getPromise();
     
 signals:
     void done(QString);
@@ -30,6 +33,7 @@ private slots:
 private:
     QFile* file;
     QNetworkReply* reply;
+    Promise* promise;
     
 };
 

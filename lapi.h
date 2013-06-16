@@ -18,9 +18,9 @@ public:
 
     QString getWorkBinDownloadUrl(const QString&);
 
-signals:
-    void tokenInvalid();
-    void tokenUpdated(const QString&);
+    void setToken(const QString&);
+
+    QNetworkAccessManager* getManager();
     
 public slots:
     
