@@ -145,6 +145,10 @@ void IVLEFetcher::gotReply(QNetworkReply *reply){
         }else if(extrasInfo.contains(reply->url().toString())){
             QMap<QString, QString> &m = extrasInfo[reply->url().toString()];
             parsePage(reply->readAll(), m["name"], m["folder"], m["exec"], reply->url());
+            extrasToFetch--;
+            if(!extrasToFetch){
+                extraReady();
+            }
         }else if(toDownload.contains(reply->url().toString())){
             updateDownload();
             qDebug()<<"reply from download "<<reply->url();
@@ -213,7 +217,7 @@ void IVLEFetcher::processAnnouncements(QVariantList l){
         if(an.size() == 0)continue;
         QDateTime date = an[0].toMap()["CreatedDate_js"].toDateTime();
         for(int j = 1; j < an.size(); j++){
-            QDateTime d = an[i].toMap()["CreatedDate_js"].toDateTime();
+            QDateTime d = an[j].toMap()["CreatedDate_js"].toDateTime();
             if(d > date){
                 date = d;
             }

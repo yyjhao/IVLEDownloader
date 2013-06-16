@@ -8,6 +8,8 @@ QT       += core gui\
             widgets\
             webkitwidgets\
             network
+CONFIG +=c++11
+QMAKE_CXXFLAGS = -mmacosx-version-min=10.7 -std=gnu++0x -stdlib=libc++
 
 TARGET = IVLEDownloader
 TEMPLATE = app
@@ -25,7 +27,9 @@ SOURCES += main.cpp\
     recentfileaction.cpp \
     announcementsmenu.cpp \
     announcementaction.cpp \
-    advanceddialog.cpp
+    advanceddialog.cpp \
+    lapi.cpp \
+    promise.cpp
 
 HEADERS  += mainwindow.h \
     settingsdialog.h \
@@ -35,7 +39,9 @@ HEADERS  += mainwindow.h \
     recentfileaction.h \
     announcementsmenu.h \
     announcementaction.h \
-    advanceddialog.h
+    advanceddialog.h \
+    lapi.h \
+    promise.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \
