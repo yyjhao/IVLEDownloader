@@ -10,18 +10,21 @@
 class ExternalPageParser : public QObject
 {
     Q_OBJECT
+    typedef QMap<QString, QMap<QString, QPair<QUrl, QString>>> Config;
 public:
     explicit ExternalPageParser(const QVariantMap&, QObject *parent = 0);
 
-    Promise* fetchFiles(const QStringList&);
+    Promise* fetchFileInfo(const QStringList&);
     
 signals:
     
 public slots:
-    void setConfig(const QVariantMap&);
+    void setConfig(const Config&);
 
 private:
-    QVariantMap config;
+    Config config;
+    QNetworkAccessManager * manager;
+    Promise* process(const QString& course, const QString& dir, const QPair<QString, QString> info);
 };
 
 #endif // EXTERNALPAGEPARSER_H

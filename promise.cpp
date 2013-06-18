@@ -107,33 +107,36 @@ Promise* Promise::then(const std::function<void(const QVariant&)>& suc, const st
     return this;
 }
 
-void Promise::resolve(const QVariant& data)
+Promise* Promise::resolve(const QVariant& data)
 {
     if(s != pending){
-        return;
+        return this;
     }else{
         s = success;
         emit done(data);
         this->data = data;
         deleteLater();
+        return this;
     }
 }
 
-void Promise::reject(const QVariant& data)
+Promise* Promise::reject(const QVariant& data)
 {
     if(s != pending){
-        return;
+        return this;
     }else{
         s = failure;
         emit fail(data);
         this->data = data;
         deleteLater();
+        return this;
     }
 }
 
-void Promise::advance(const QVariant& data)
+Promise* Promise::advance(const QVariant& data)
 {
     emit progress(data);
+    return this;
 }
 
 Promise::State Promise::state(){

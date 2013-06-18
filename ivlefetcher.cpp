@@ -43,12 +43,14 @@ void IVLEFetcher::start(){
         emit statusUpdate(gettingWebbinInfo);
         QVariantList modules = data.toMap().value("Results").toList();
         QList<Promise*> ps;
+        QStringList moduleNames;
         for(auto module : modules){
             QVariantMap map = module.toMap();
             if(map.value("isActive") == QString("Y")){
                 QVariantMap course;
                 QString id = map.value("ID").toString();
                 QString name = map.value("CourseCode").toString().replace('/',"-");
+                moduleNames.push_back(name);
                 ps.push_back(api->fetchWorkbin(id)->then([=](const QVariant& data){
                     QVariantList resultsList = data.toMap().value("Results").toList();
                     int c = 0;
@@ -66,6 +68,9 @@ void IVLEFetcher::start(){
                 }));
             }
         }
+        ps.push_back(parser->fetchFileInfo(moduleNames)->then([=](const QVariant& data){
+            extras = data;
+        }));
         return new Promise(ps, this);            
     })->pipe([=](const QVariant&){
         emit statusUpdate(gottenWebbinInfo);

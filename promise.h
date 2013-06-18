@@ -32,9 +32,9 @@ signals:
     void fail(const QVariant&);
     void progress(const QVariant&);
 public slots:
-    void resolve(const QVariant& = QVariant());
-    void reject(const QVariant& = QVariant());
-    void advance(const QVariant& = QVariant());
+    Promise* resolve(const QVariant& = QVariant());
+    Promise* reject(const QVariant& = QVariant());
+    Promise* advance(const QVariant& = QVariant());
 
 private:
     State s;
