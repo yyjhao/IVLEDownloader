@@ -8,33 +8,68 @@ Promise::Promise(QObject *parent) :
     s = pending;
 }
 
-Promise::Promise(QList<Promise *> promises, QObject *parent) :
-    Promise(parent)
+Promise* Promise::all(QList<Promise *> promises, QObject *parent)
 {
-    tasksCount = promises.size();
-    datas.reserve(tasksCount);
+    Promise* np = new Promise(parent);
+    np->tasksCount = promises.size();
+    np->datas.reserve(np->tasksCount);
     int i = 0;
-    if(tasksCount == 0){
-        this->resolve();
+    if(np->tasksCount == 0){
+        np->resolve();
     }
     for(auto p : promises){
-        p->setParent(this);
-        datas.push_back(QVariant());
+        p->setParent(np);
+        np->datas.push_back(QVariant());
         p->then([=](const QVariant& data){
-            if(s == pending){
-                tasksCount--;
-                datas.replace(i, data);
-                if(tasksCount == 0){
-                    resolve(QVariant(datas));
+            if(np->s == pending){
+                np->tasksCount--;
+                np->datas.replace(i, data);
+                if(np->tasksCount == 0){
+                    np->resolve(QVariant(np->datas));
                 }
             }
         }, [=](const QVariant& data){
-            if(s == pending){
-                reject(data);
+            if(np->s == pending){
+                np->reject(data);
             }
         });
         i++;
     }
+    return np;
+}
+
+Promise* Promise::some(QList<Promise *> promises, QObject *parent)
+{
+    Promise* np = new Promise(parent);
+    np->tasksCount = promises.size();
+    np->datas.reserve(np->tasksCount);
+    int i = 0;
+    if(np->tasksCount == 0){
+        np->resolve();
+    }
+    for(auto p : promises){
+        p->setParent(np);
+        np->datas.push_back(QVariant());
+        p->then([=](const QVariant& data){
+            if(np->s == pending){
+                np->tasksCount--;
+                np->datas.replace(i, data);
+                if(np->tasksCount == 0){
+                    np->resolve(QVariant(np->datas));
+                }
+            }
+        }, [=](const QVariant& data){
+            if(np->s == pending){
+                np->tasksCount--;
+                np->datas.replace(i, QVariant());
+                if(np->tasksCount == 0){
+                    np->resolve(QVariant(np->datas));
+                }
+            }
+        });
+        i++;
+    }
+    return np;
 }
 
 Promise* Promise::pipe(const Monad& suc,

@@ -9,6 +9,8 @@ class Promise : public QObject
 {
     Q_OBJECT
 public:
+    static Promise* all(QList<Promise*>, QObject *parent = 0);
+    static Promise* some(QList<Promise*>, QObject *parent = 0);
     enum State{
         pending,
         success,
@@ -16,7 +18,6 @@ public:
     };
     typedef std::function<Promise*(const QVariant&)> Monad;
     explicit Promise(QObject *parent = 0);
-    explicit Promise(QList<Promise*>, QObject *parent = 0);
     State state();
     Promise* pipe(const Monad&, const Monad&);
     Promise* pipe(const Monad&);

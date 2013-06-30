@@ -52,6 +52,7 @@ void IVLEFetcher::start(){
                 QString name = map.value("CourseCode").toString().replace('/',"-");
                 moduleNames.push_back(name);
                 ps.push_back(api->fetchWorkbin(id)->then([=](const QVariant& data){
+                    qDebug()<<"ok"<<name;
                     QVariantList resultsList = data.toMap().value("Results").toList();
                     int c = 0;
                     for(auto workbin : resultsList){
@@ -65,13 +66,16 @@ void IVLEFetcher::start(){
                         courses[id] = course;
                         c++;
                     }
+                }, [=](const QVariant& err){
+                    qDebug()<<"err"<<name<<err;
                 }));
             }
         }
         ps.push_back(parser->fetchFileInfo(moduleNames)->then([=](const QVariant& data){
-            extras = data;
+            extras = data.toMap();
+            qDebug()<<"extras"<<extras;
         }));
-        return new Promise(ps, this);            
+        return Promise::all(ps, this);            
     })->pipe([=](const QVariant&){
         emit statusUpdate(gottenWebbinInfo);
         buildDirectoriesAndDownloadList();
@@ -89,7 +93,7 @@ void IVLEFetcher::start(){
                 emit statusUpdate(remainingChange);
             }));
         }
-        return new Promise(ps, this->session);
+        return Promise::all(ps, this->session);
     })->then([=](const QVariant& data){
         emit statusUpdate(complete);
         qDebug()<<data;

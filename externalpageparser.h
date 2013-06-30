@@ -5,14 +5,17 @@
 #include <QVariant>
 #include <QtNetwork>
 #include <QtWebkit>
+#include <QtWebkit>
+#include <QWebPage>
+#include <QWebFrame>
 #include "promise.h"
 
 class ExternalPageParser : public QObject
 {
     Q_OBJECT
-    typedef QMap<QString, QMap<QString, QPair<QUrl, QString>>> Config;
 public:
-    explicit ExternalPageParser(const QVariantMap&, QObject *parent = 0);
+    typedef QMap<QString, QMap<QString, QPair<QUrl, QString>>> Config;
+    explicit ExternalPageParser(const Config&, QObject *parent = 0);
 
     Promise* fetchFileInfo(const QStringList&);
     
@@ -24,7 +27,9 @@ public slots:
 private:
     Config config;
     QNetworkAccessManager * manager;
-    Promise* process(const QString& course, const QString& dir, const QPair<QString, QString> info);
+    Promise* process(const QString& course, const QString& dir, const QPair<QUrl, QString>& info);
+
+    static const QVariantMap resultListToMap(const QList<QString>&, const QUrl& base);
 };
 
 #endif // EXTERNALPAGEPARSER_H

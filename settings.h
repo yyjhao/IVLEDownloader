@@ -15,6 +15,7 @@
 #include <QDir>
 #include <QFile>
 #include <QVariant>
+#include "externalpageparser.h"
 
 class Settings : public QObject
 {
@@ -30,7 +31,9 @@ public:
     bool ignoreUploadable();
     bool notifyAnnouncement();
     QDateTime lastAnnouncementTime();
-    QVariantMap pagesInfo();
+    ExternalPageParser::Config pagesInfo();
+
+    static ExternalPageParser::Config convertJSONToConfig(const QVariantMap&);
 
 signals:
     
@@ -52,7 +55,7 @@ private:
     bool _notify;
     bool _notifyAnnouncement;
     QDateTime _lastAnnouncementTime;
-    QVariantMap _pagesInfo;
+    ExternalPageParser::Config _pagesInfo;
     QFile* pagesInfoFile;
 };
 
