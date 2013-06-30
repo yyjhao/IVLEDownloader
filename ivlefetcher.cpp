@@ -33,7 +33,6 @@ void IVLEFetcher::start(){
     })->pipe([=](const QVariant&){
         emit statusUpdate(gettingUserInfo);
         return api->fetchUserInfo()->then([=](const QVariant& data){
-            qDebug()<<data;
             _username = data.toString();
             emit statusUpdate(gottenUserInfo);
         });
@@ -51,6 +50,9 @@ void IVLEFetcher::start(){
                 QString id = map.value("ID").toString();
                 QString name = map.value("CourseCode").toString().replace('/',"-");
                 moduleNames.push_back(name);
+                QVariantMap tmpc;
+                tmpc["name"] = name;
+                courses[id] = tmpc;
                 ps.push_back(api->fetchWorkbin(id)->then([=](const QVariant& data){
                     qDebug()<<"ok"<<name;
                     QVariantList resultsList = data.toMap().value("Results").toList();
@@ -84,13 +86,15 @@ void IVLEFetcher::start(){
         auto manager = api->getManager();
         QList<Promise*> ps;
         for(auto it = toDownload.begin(); it != toDownload.end(); it++){
+            qDebug()<<"down"<<it.value();
             QNetworkReply *re = manager->get(QNetworkRequest(QUrl(it.key())));
             re->setParent(session);
             Downloader* dl = new Downloader(it.value().toString(),re,session);
             numOfFiles++;
-            ps.push_back(dl->getPromise()->then([=](const QVariant&){
+            ps.push_back(dl->getPromise()->then([=](const QVariant& data){
                 numOfFiles--;
                 emit statusUpdate(remainingChange);
+                qDebug()<<data;
             }));
         }
         return Promise::all(ps, this->session);
@@ -98,7 +102,7 @@ void IVLEFetcher::start(){
         emit statusUpdate(complete);
         qDebug()<<data;
     }, [=](const QVariant& error){
-        qDebug()<<error;
+        qDebug()<<"err"<<error;
         emit statusUpdate(networkError);
     });
 }

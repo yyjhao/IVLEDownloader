@@ -21,29 +21,36 @@ Promise* ExternalPageParser::fetchFileInfo(const QStringList& list)
     }
     return Promise::some(ps, this)->pipe([=](const QVariant& datas){
         QVariantList list = datas.toList();
-        QMap<QString, QMap<QString, QVariantMap>> aggregate;
+        QMap<QString, QMap<QString, QMap<QString, QVariantMap>>> aggregate;
+        QVariantMap top;
         for(auto d : list){
             if(d.isValid()){
                 auto map = d.toMap();
                 QString course = map["course"].toString();
-                QString dir = map["course"].toString();
+                QString dir = map["dir"].toString();
                 QVariantMap files = map["result"].toMap();
                 if(dir == QString(".")){
-                    aggregate[course]["files"] = files;
+                    top = files;
                 }else{
-                    aggregate[course]["folders"][dir] = files;
+                    aggregate[course]["folders"][dir]["files"] = files;
                 }
             }
         }
         QVariantMap map;
         for(auto it = aggregate.constBegin(); it != aggregate.constEnd(); ++it){
             auto& mm = it.value();
-            QVariantMap m;
+            QVariantMap nm;
             for(auto itt = mm.constBegin(); itt != mm.constEnd(); ++itt){
-                m[itt.key()] = itt.value();
+                auto& mmm = itt.value();
+                QVariantMap m;
+                for(auto ittt = mmm.constBegin(); ittt != mmm.constEnd(); ++ittt){
+                    m[ittt.key()] = ittt.value();
+                }
+                nm[itt.key()] = m;
             }
-            map[it.key()] = m;
+            map[it.key()] = nm;
         }
+        map["files"] = top;
         return (new Promise(this))->resolve(QVariant(map));
     });
 }
@@ -58,10 +65,16 @@ const QVariantMap ExternalPageParser::resultListToMap(const QList<QString>& resu
     QVariantMap m;
     for(auto r : result){
         auto filename = r.right(r.size() - r.lastIndexOf("/") - 1);
+        if(filename.isEmpty()){
+            r = r.left(r.size() - 1);
+            filename = r.right(r.size() - r.lastIndexOf("/") - 1);
+        }
         if(filename.indexOf(".") == -1){
             filename += QString(".html");
         }
-        m[base.resolved(QUrl(r)).toString()] = filename;
+        QVariantMap file;
+        file["name"] = filename;
+        m[base.resolved(QUrl(r)).toString()] = file;
     }
     return m;
 }

@@ -13,7 +13,7 @@ Downloader::Downloader(QString fileName, QNetworkReply* reply, QObject *parent) 
     connect(reply, SIGNAL(downloadProgress(qint64,qint64)),this,SLOT(writeFile(qint64,qint64)));
     connect(reply,SIGNAL(finished()),this,SLOT(finished()));
 
-    promise = new Promise(parent);
+    promise = new Promise(this);
 }
 
 Downloader::~Downloader(){
@@ -24,7 +24,7 @@ void Downloader::finished(){
     file->rename(file->fileName().replace(QString(".ivledl"),QString("")));
     file->close();
     emit done(reply->url().toString());
-    promise->resolve();
+    promise->resolve(file->fileName());
     this->deleteLater();
 }
 
