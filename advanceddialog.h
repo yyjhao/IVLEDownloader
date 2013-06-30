@@ -2,6 +2,8 @@
 #define ADVANCEDDIALOG_H
 
 #include <QDialog>
+#include <QMessageBox>
+#include <QtNetwork>
 
 namespace Ui {
 class AdvancedDialog;
@@ -15,8 +17,12 @@ public:
     explicit AdvancedDialog(QWidget *parent = 0);
     ~AdvancedDialog();
     
+private slots:
+    void on_pushButton_clicked();
+
 private:
     Ui::AdvancedDialog *ui;
+    QNetworkAccessManager *manager;
 };
 
 #endif // ADVANCEDDIALOG_H

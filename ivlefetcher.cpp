@@ -16,11 +16,12 @@ IVLEFetcher::IVLEFetcher(QString token, ExternalPageParser* parser, QString dir,
     this->maxFileSize = maxfilesize;
     timer = new QTimer(this);
     timer->setSingleShot(true);
-
+    connect(timer,SIGNAL(timeout()),this,SLOT(start()));
     api = new Lapi(token, this);
 }
 
 void IVLEFetcher::start(){
+    timer->stop();
     api->validate()->then([=](const QVariant& data){
         auto t = data.toString();
         if(t != token){
@@ -100,10 +101,12 @@ void IVLEFetcher::start(){
         return Promise::all(ps, this->session);
     })->then([=](const QVariant& data){
         emit statusUpdate(complete);
+        timer->start(300000);
         qDebug()<<data;
     }, [=](const QVariant& error){
         qDebug()<<"err"<<error;
         emit statusUpdate(networkError);
+        timer->start(300000);
     });
 }
 
