@@ -33,6 +33,7 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent *);
+    bool event(QEvent *e);
 
     
 private slots:

@@ -70,7 +70,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QAction* setting = new QAction("Settings",this);
 #endif
     setting->setMenuRole(QAction::NoRole);
-    connect(setting,SIGNAL(triggered()),settingsDialog,SLOT(show()));
+    // connect(setting,SIGNAL(triggered()),settingsDialog,SLOT(show()));
+    connect(setting, &QAction::triggered, [=](){
+        settingsDialog->setWindowFlags(settingsDialog->windowFlags() | (Qt::WindowStaysOnTopHint));
+        settingsDialog->show();
+    });
     trayMenu->addAction(setting);
 
     trayMenu->addSeparator();

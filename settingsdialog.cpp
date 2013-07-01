@@ -8,7 +8,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setAttribute(Qt::WA_QuitOnClose,false);
-//    this->setWindowFlags((Qt::WindowFlags) (Qt::Window | Qt::WindowStaysOnTopHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint  & (~Qt::WindowFullscreenButtonHint)) );
+    this->setWindowFlags((Qt::WindowFlags) (Qt::Window | Qt::WindowStaysOnTopHint | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint  & (~Qt::WindowFullscreenButtonHint)) );
     webviewDialog = new QDialog(this);
     webviewDialog->setLayout(new QBoxLayout(QBoxLayout::LeftToRight));
     webviewDialog->setAttribute(Qt::WA_QuitOnClose,false);
@@ -63,12 +63,22 @@ void SettingsDialog::on_pushButton_2_clicked()
     }
 }
 
-void SettingsDialog::setDisplayedSettings(QVariantMap m){
+void SettingsDialog::setDisplayedSettings(QVariantMap m)
+{
     ui->spinBox->setValue( (int)(m["maxFileSize"].toDouble() / 1024 / 1024) );
     ui->notifyCheckBox->setCheckState( m["notify"].toBool() ? Qt::Checked : Qt::Unchecked );
     ui->igUpCheckBox->setCheckState( m["ignoreUploadable"].toBool() ? Qt::Checked : Qt::Unchecked );
     ui->notifyAnmCheckBox->setCheckState( m["notifyAnm"].toBool() ? Qt::Checked : Qt::Unchecked );
     adialog->setConfigContent(m["jsonConfig"].toString());
+}
+
+bool SettingsDialog::event(QEvent *e)
+{
+    if(e->type() == QEvent::WindowActivate){
+        this->setWindowFlags(this->windowFlags() & (~Qt::WindowStaysOnTopHint));
+        this->show();
+    }
+    return QDialog::event(e);
 }
 
 void SettingsDialog::closeEvent(QCloseEvent *e){
