@@ -271,6 +271,9 @@ void IVLEFetcher::buildDirectoriesAndDownloadList(){
         QString name = course["name"].toString();
         auto filesystem = cleanFileSystem(mergeFileSystems(course.value("filesystem").toMap(), extras[name].toMap()));
         // module has no files, skip
+        if(name == QString("Rmodules")){
+            qDebug()<<filesystem<<"eh";
+        }
         if(filesystem.isEmpty())continue;
         if(!path.exists(name)){
             if(!path.mkpath(name)){

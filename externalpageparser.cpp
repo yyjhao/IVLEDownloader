@@ -30,7 +30,7 @@ Promise* ExternalPageParser::fetchFileInfo(const QStringList& list)
                 QString dir = map["dir"].toString();
                 QVariantMap files = map["result"].toMap();
                 if(dir == QString(".")){
-                    top = files;
+                    top[course] = files;
                 }else{
                     aggregate[course]["folders"][dir]["files"] = files;
                 }
@@ -50,7 +50,11 @@ Promise* ExternalPageParser::fetchFileInfo(const QStringList& list)
             }
             map[it.key()] = nm;
         }
-        map["files"] = top;
+        for(auto it = top.constBegin(); it != top.constEnd(); ++it){
+            auto c = map[it.key()].toMap();
+            c["files"] = it.value();
+            map[it.key()] = c;
+        }
         return (new Promise(this))->resolve(QVariant(map));
     });
 }

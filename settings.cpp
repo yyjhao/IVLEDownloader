@@ -17,13 +17,19 @@ Settings::Settings(QDir baseDir, QObject *parent) :
         pagesInfoFile->close();
     }else{
         pagesInfoFile->open(QIODevice::ReadOnly);
-        _pagesInfo = convertJSONToConfig(QJsonDocument::fromJson(pagesInfoFile->readAll()).toVariant().toMap());
+        auto jsond = QJsonDocument::fromJson(pagesInfoFile->readAll());
+        _pagesInfo = convertJSONToConfig(jsond.toVariant().toMap());
+        _pagesInfoJson = jsond.toJson();
         pagesInfoFile->close();
    }
 }
 
 ExternalPageParser::Config Settings::pagesInfo(){
     return _pagesInfo;
+}
+
+QString Settings::pagesInfoJson(){
+    return _pagesInfoJson;
 }
 
 ExternalPageParser::Config Settings::convertJSONToConfig(const QVariantMap& m)
@@ -39,6 +45,14 @@ ExternalPageParser::Config Settings::convertJSONToConfig(const QVariantMap& m)
         cm[it.key()] = cmm;
     }
     return cm;
+}
+
+void Settings::setConfig(const QVariantMap& m){
+    _pagesInfo = convertJSONToConfig(m);
+    _pagesInfoJson = QJsonDocument::fromVariant(QVariant(m)).toJson();
+    pagesInfoFile->open(QIODevice::WriteOnly);
+    pagesInfoFile->write(_pagesInfoJson.toUtf8());
+    pagesInfoFile->close();
 }
 
 bool Settings::ignoreUploadable(){

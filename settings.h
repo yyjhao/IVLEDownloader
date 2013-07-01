@@ -32,6 +32,7 @@ public:
     bool notifyAnnouncement();
     QDateTime lastAnnouncementTime();
     ExternalPageParser::Config pagesInfo();
+    QString pagesInfoJson();
 
     static ExternalPageParser::Config convertJSONToConfig(const QVariantMap&);
 
@@ -45,6 +46,7 @@ public slots:
     void setIgnoreUploadable(bool);
     void setNotifyAnnouncement(bool);
     void setLastAnnouncementTime(QDateTime);
+    void setConfig(const QVariantMap&);
 
 private:
     QSettings* settingsPrivate;
@@ -57,6 +59,7 @@ private:
     QDateTime _lastAnnouncementTime;
     ExternalPageParser::Config _pagesInfo;
     QFile* pagesInfoFile;
+    QString _pagesInfoJson;
 };
 
 #endif // SETTINGS_H

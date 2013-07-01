@@ -47,6 +47,7 @@ signals:
     void gottenToken(QString);
     void updateDirectory(QString);
     void closedWithSettings(QVariantMap);
+    void configSaved(const QVariantMap&);
 
 private:
     Ui::SettingsDialog *ui;

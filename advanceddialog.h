@@ -16,9 +16,17 @@ class AdvancedDialog : public QDialog
 public:
     explicit AdvancedDialog(QWidget *parent = 0);
     ~AdvancedDialog();
+
+signals:
+    void configSaved(const QVariantMap&);
+
+public slots:
+    void setConfigContent(const QString&);
     
 private slots:
     void on_pushButton_clicked();
+
+    void on_pushButton_2_clicked();
 
 private:
     Ui::AdvancedDialog *ui;

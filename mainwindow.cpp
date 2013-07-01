@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m["maxFileSize"] = settings->maxFileSize();
     m["ignoreUploadable"] = settings->ignoreUploadable();
     m["notifyAnm"] = settings->notifyAnnouncement();
+    m["jsonConfig"] = settings->pagesInfoJson();
 
     parser = new ExternalPageParser(settings->pagesInfo());
 
@@ -47,6 +48,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(settingsDialog,SIGNAL(updateDirectory(QString)),settings,SLOT(setDirectory(QString)));
     connect(settingsDialog,SIGNAL(updateDirectory(QString)),this,SLOT(updateDirectory(QString)));
     connect(settingsDialog,SIGNAL(closedWithSettings(QVariantMap)),this,SLOT(processSettingsDialog(QVariantMap)));
+    connect(settingsDialog, &SettingsDialog::configSaved, [=](const QVariantMap& data){
+        settings->setConfig(data);
+        parser->setConfig(settings->pagesInfo());
+    });
+
 
     trayMenu = new QMenu(this);
 

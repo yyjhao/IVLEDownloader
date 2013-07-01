@@ -18,6 +18,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     connect(webView, SIGNAL(loadFinished(bool)), this, SLOT(onWebviewLoaded()));
 
     adialog = new AdvancedDialog(this);
+    connect(adialog, &AdvancedDialog::configSaved, this, &SettingsDialog::configSaved);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -67,6 +68,7 @@ void SettingsDialog::setDisplayedSettings(QVariantMap m){
     ui->notifyCheckBox->setCheckState( m["notify"].toBool() ? Qt::Checked : Qt::Unchecked );
     ui->igUpCheckBox->setCheckState( m["ignoreUploadable"].toBool() ? Qt::Checked : Qt::Unchecked );
     ui->notifyAnmCheckBox->setCheckState( m["notifyAnm"].toBool() ? Qt::Checked : Qt::Unchecked );
+    adialog->setConfigContent(m["jsonConfig"].toString());
 }
 
 void SettingsDialog::closeEvent(QCloseEvent *e){

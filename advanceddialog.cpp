@@ -37,3 +37,20 @@ void AdvancedDialog::on_pushButton_clicked()
         });
     }
 }
+
+void AdvancedDialog::on_pushButton_2_clicked()
+{
+    auto json = QJsonDocument::fromJson(ui->plainTextEdit->toPlainText().toUtf8()).toVariant();
+    if(json.isValid()){
+        emit configSaved(json.toMap());
+        QMessageBox::information(this, "Saved", "The json config is saved");
+    }else{
+        QMessageBox::critical(this, "Saving fail",
+                    "The config is not valid");
+    }
+}
+
+void AdvancedDialog::setConfigContent(const QString& data)
+{
+    ui->plainTextEdit->setPlainText(data);
+}
