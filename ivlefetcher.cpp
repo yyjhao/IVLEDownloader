@@ -95,6 +95,7 @@ void IVLEFetcher::start(){
             ps.push_back(dl->getPromise()->then([=](const QVariant& data){
                 numOfFiles--;
                 emit statusUpdate(remainingChange);
+                emit fileDownloaded(data.toString());
                 qDebug()<<data;
             }));
         }
