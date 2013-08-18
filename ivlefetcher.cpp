@@ -99,6 +99,7 @@ void IVLEFetcher::start(){
                 qDebug()<<data;
             }));
         }
+        toDownload.clear();
         return Promise::all(ps, this->session);
     })->then([=](const QVariant& data){
         emit statusUpdate(complete);
