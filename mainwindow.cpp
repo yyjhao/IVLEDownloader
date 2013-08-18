@@ -282,5 +282,5 @@ void MainWindow::on_pushButton_clicked()
 }
 
 void MainWindow::openFolder(){
-    QDesktopServices::openUrl(QString("file://") + settings->directory());
+    QDesktopServices::openUrl(QString("file:///") + settings->directory());
 }
