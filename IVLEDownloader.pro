@@ -9,7 +9,9 @@ QT       += core gui\
             webkitwidgets\
             network
 CONFIG +=c++11
-QMAKE_CXXFLAGS = -mmacosx-version-min=10.7 -std=gnu++0x -stdlib=libc++
+macx{
+    QMAKE_CXXFLAGS = -mmacosx-version-min=10.7 -std=gnu++0x -stdlib=libc++
+}
 
 TARGET = IVLEDownloader
 TEMPLATE = app
