@@ -84,8 +84,8 @@ bool SettingsDialog::event(QEvent *e)
 void SettingsDialog::closeEvent(QCloseEvent *e){
     QVariantMap m;
     m["maxFileSize"] = ui->spinBox->value();
-    m["ignoreUploadable"] = ui->notifyCheckBox->checkState() == Qt::Checked;
-    m["notify"] = ui->igUpCheckBox->checkState() == Qt::Checked;
+    m["ignoreUploadable"] = ui->igUpCheckBox->checkState() == Qt::Checked;
+    m["notify"] = ui->notifyCheckBox->checkState() == Qt::Checked;
     m["notifyAnm"] = ui->notifyAnmCheckBox->checkState() == Qt::Checked;
     emit closedWithSettings(m);
     QDialog::closeEvent(e);
