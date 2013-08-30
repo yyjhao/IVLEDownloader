@@ -9,7 +9,7 @@ Settings::Settings(QDir baseDir, QObject *parent) :
     _notify = settingsPrivate->value("notify",true).toBool();
     _notifyAnnouncement = settingsPrivate->value("notifyAnnouncement",true).toBool();
     _recents = settingsPrivate->value("recentFiles",QStringList()).toStringList();
-    _ignoreUploadable = settingsPrivate->value("ignoreUploadable", false).toBool();
+    _ignoreUploadable = settingsPrivate->value("ignoreUploadable", true).toBool();
     _lastAnnouncementTime = settingsPrivate->value("lastAnnouncementTime", QDateTime::currentDateTime()).toDateTime();
     pagesInfoFile = new QFile(baseDir.filePath("pagesInfo.json"), this);
     if(!pagesInfoFile->exists()){
