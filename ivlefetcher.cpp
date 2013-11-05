@@ -106,9 +106,13 @@ void IVLEFetcher::start(){
         timer->start(300000);
         qDebug()<<data;
     }, [=](const QVariant& error){
-        qDebug()<<"err"<<error;
-        emit statusUpdate(networkError);
-        timer->start(300000);
+        if(error.toString() == "invalid token"){
+            emit statusUpdate(invalidToken);
+        } else {
+            qDebug()<<"err"<<error;
+            emit statusUpdate(networkError);
+            timer->start(300000);
+        }
     });
 }
 

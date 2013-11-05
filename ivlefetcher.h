@@ -27,7 +27,8 @@ enum fetchingState{
     downloading,
     remainingChange,
     complete,
-    networkError
+    networkError,
+    invalidToken
 };
 
 enum fetchingError{

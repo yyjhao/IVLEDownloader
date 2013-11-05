@@ -232,6 +232,9 @@ void MainWindow::processAnnouncements(QVariantList l){
 
 void MainWindow::updateStatus(fetchingState state){
     switch(state){
+    case invalidToken:
+        settingsDialog->show();
+        break;
     case gettingUserInfo:
         settingsDialog->setLabelText("Fetching your infomation....");
         statusAction->setText("Verifying user infomation...");
