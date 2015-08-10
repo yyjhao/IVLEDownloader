@@ -7,7 +7,7 @@
 #define SETTINGSDIALOG_H
 
 #include <QDialog>
-#include <QtWebkitWidgets>
+#include <QtWebKitWidgets>
 #include <QtWidgets>
 #include <QFileDialog>
 #include <QCheckBox>
