@@ -164,7 +164,7 @@ void IVLEFetcher::processAnnouncements(QVariantList l){
         curOut = QVariantMap();
         curOut["latest_date"] = date;
         curOut["course"] = cur["CourseCode"].toString();
-        curOut["url"] = QString("https://ivle.nus.edu.sg/announcement/popup_list.aspx?CourseID=%1").arg(cur["ID"].toString());
+        curOut["url"] = QString("https://ivle.nus.edu.sg/v1/Announcement/default.aspx?CourseID=%1").arg(cur["ID"].toString());
         out.push_back(curOut);
     }
     emit(gotUnreadAnnouncements(out));
