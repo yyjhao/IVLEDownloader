@@ -39,7 +39,7 @@ void SettingsDialog::onWebviewLoaded(){
 
 void SettingsDialog::on_pushButton_clicked()
 {
-    webView->setUrl("https://ivle.nus.edu.sg/api/login/?apikey=dy1R6cs39qzjQamrIzX6U");
+    webView->setUrl(QString("https://ivle.nus.edu.sg/api/login/?apikey=%1").arg(APIKEY));
     //webviewDialog->setWindowModality(Qt::ApplicationModal);
     //setting modality cause the cursor to disappear in textbox...
     webviewDialog->show();
