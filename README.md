@@ -1,7 +1,7 @@
 # 11 Apr 2018
 
 Windows release version:    
-## [Download](https://github.com/denunciator/IVLEDownloader/blob/master/IVLEDownloader.exe?raw=true) 
+### [Download](https://github.com/denunciator/IVLEDownloader/blob/master/IVLEDownloader.exe?raw=true) 
 
 See https://github.com/yyjhao/IVLEDownloader/issues/14 for context.
 
