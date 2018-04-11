@@ -1,3 +1,15 @@
+# 11 Apr 2018
+
+Windows release version:    
+### [Download](https://github.com/denunciator/IVLEDownloader/blob/master/IVLEDownloader.exe?raw=true) 
+
+Get the original from [here](https://github.com/yyjhao/IVLEDownloader/releases/tag/V1.1) and overwrite with the above .exe file.
+
+See https://github.com/yyjhao/IVLEDownloader/issues/14 for context.
+
+
+
+
 # Overview
 
 This is simple Qt daemon to automatically download [National University of Singapore](http://www.nus.edu.sg/)'s
