@@ -27,7 +27,7 @@ In order to compile the source code, Qt SDK 5.5.1 is the last version you may us
 
 When compiling your own app, its recommended to change the APIKEY in the .pro file to your own!
 
-Useful links [here](http://doc.qt.io/qt-5/osx-deployment.html) and [here](https://wiki.qt.io/Build_Standalone_Qt_Application_for_Windows
+Useful links [here](http://doc.qt.io/qt-5/osx-deployment.html) and [here](https://wiki.qt.io/Build_Standalone_Qt_Application_for_Windows)
 
 Troubleshooting qmake [here](https://stackoverflow.com/questions/22116608/cannot-run-qmake-in-mac-terminal)
 
