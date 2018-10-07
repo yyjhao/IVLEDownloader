@@ -103,7 +103,7 @@ void IVLEFetcher::start(){
         return Promise::all(ps, this->session);
     })->then([=](const QVariant& data){
         emit statusUpdate(complete);
-        timer->start(300000);
+        timer->start(3600000);
         qDebug()<<data;
     }, [=](const QVariant& error){
         if(error.toString() == "invalid token"){
@@ -111,7 +111,7 @@ void IVLEFetcher::start(){
         } else {
             qDebug()<<"err"<<error;
             emit statusUpdate(networkError);
-            timer->start(300000);
+            timer->start(3600000);
         }
     });
 }
