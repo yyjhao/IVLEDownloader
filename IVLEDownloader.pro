@@ -17,7 +17,7 @@ TARGET = IVLEDownloader
 TEMPLATE = app
 
 
-DEFINES += APIKEY=\\\"k0z3B5Ng9rhy3MKVAKsGG\\\" \
+DEFINES += APIKEY=\\\"XafJI3axiXT5MygrV2eL5\\\" \
             MAXRECENT=5
 
 SOURCES += main.cpp\
